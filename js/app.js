@@ -225,6 +225,7 @@ function newDoc(type){
         dueDate: type==='facture' ? addDaysISO(todayISO(), DB.settings.paydays) : '',
         paidDate:'',
         clientId: DB.clients[0]?.id || '',
+        objet:'',
         lines:[ {designation:'', qty:1, unit:'forfait', pu:0} ],
         notes:''
     };
@@ -246,6 +247,7 @@ function openDocModal(){
     $('#doc-echeance').value = editing.dueDate || '';
     $('#doc-paid').value     = editing.paidDate || '';
     $('#doc-echeance-wrap').style.display = isFac ? '' : 'none';
+    $('#doc-objet').value    = editing.objet || '';
     $('#doc-notes').value    = editing.notes || '';
     $('#doc-tvanote').textContent = DB.settings.tva;
 
@@ -314,6 +316,7 @@ function collectDoc(){
     editing.validity = $('#doc-validity').value;
     editing.status   = $('#doc-status').value;
     editing.clientId = $('#doc-client').value;
+    editing.objet    = $('#doc-objet').value.trim();
     editing.notes    = $('#doc-notes').value;
     if(editing.type==='facture'){
         editing.dueDate  = $('#doc-echeance').value;
@@ -423,6 +426,8 @@ function printDoc(){
                 ${c.email?`<p>${esc(c.email)}</p>`:''}
             </div>
         </div>
+
+        ${editing.objet?`<div class="doc-objet"><span class="do-label">Objet :</span> ${esc(editing.objet)}</div>`:''}
 
         <table class="doc-table">
             <colgroup>
@@ -651,11 +656,20 @@ function convertDemandeToDevis(rec){
         date: todayISO(), validity: DB.settings.validity,
         dueDate:'', paidDate:'',
         clientId: cl.id,
+        objet: types.length ? types.join(', ') : firstSentence(desc),  // résumé court (imprimé)
         lines: lines,
         notes: buildDemandeNote(rec, types, desc)    // note interne (non imprimée)
     };
     closeModal('#demandeModal');
     openDocModal();
+}
+
+/* Première phrase d'un texte (pour un objet court) */
+function firstSentence(t){
+    t = (t||'').trim();
+    if(!t) return '';
+    const m = t.match(/^[^.!?\n]+[.!?]?/);
+    return (m ? m[0] : t).trim();
 }
 
 /* Récapitulatif structuré de la demande → note interne du devis (champs renseignés seulement) */
