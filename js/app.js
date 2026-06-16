@@ -37,8 +37,9 @@ const DEFAULTS = {
         devprefix:'DEV',
         facprefix:'FAC',
         counters:{},  // {DEV-2026: 1, FAC-2026: 1}
-        formurl:'',     // URL publique de satisfaction.html (lien d'avis envoyé aux clients)
-        satendpoint:''  // URL Apps Script …/exec pour lire les avis (Airtable)
+        formurl:'',       // URL publique de satisfaction.html (lien d'avis envoyé aux clients)
+        satendpoint:'',   // URL Apps Script …/exec pour lire les avis ET les demandes (Airtable)
+        demandeFormUrl:'' // URL publique de demande.html (formulaire de demande d'intervention)
     },
     clients:[
         {id:'cl_demo', name:'A3D Design', address:'', siret:'', contact:'', email:'', phone:''}
@@ -101,6 +102,7 @@ function renderView(name){
     if(name==='devis')     renderDocList('devis');
     if(name==='factures')  renderDocList('facture');
     if(name==='bilan')     renderBilan();
+    if(name==='demandes')  renderDemandes();
     if(name==='satisfaction') renderSatisfaction();
     if(name==='clients')   renderClients();
     if(name==='settings')  fillSettings();
@@ -524,6 +526,156 @@ function exportCsv(){
 }
 
 /* ============================================================
+   DEMANDES D'INTERVENTION (via Airtable / Google Apps Script)
+   Lecture : même endpoint que la satisfaction + ?type=demande
+   ============================================================ */
+let demCache = null;
+let currentDemande = null;
+const TYPE_BESOIN_LABEL = ['Tableau de bord Power BI','Automatisation Excel / VBA',
+    "Correction d'un fichier existant",'Extraction / analyse de données (SQL)','Formation','Je ne sais pas trop'];
+
+function renderDemandes(force){
+    const box = $('#demBody');
+    const ep  = (DB.settings.satendpoint||'').trim();
+    if(!ep){ box.innerHTML = demHelp(); bindDemHelp(); return; }
+
+    if(demCache && !force){ renderDemList(demCache); return; }
+    box.innerHTML = `<div class="empty"><div class="big">⏳</div>Chargement des demandes…</div>`;
+    fetch(ep + (ep.includes('?')?'&':'?') + 'type=demande')
+        .then(r=>r.json())
+        .then(data=>{
+            const records = (data.records||[]).map(r=> r && r.fields ? r.fields : r);
+            demCache = records;
+            renderDemList(records);
+        })
+        .catch(()=>{ box.innerHTML = `<div class="empty"><div class="big">⚠</div>Impossible de charger les demandes.<br><span class="small">Vérifiez l'endpoint dans Réglages et que la table « Demandes » existe (fonction setupDemandes).</span></div>`; });
+}
+
+function renderDemList(records){
+    const box = $('#demBody');
+    if(!records.length){
+        box.innerHTML = `<div class="empty"><div class="big">📨</div>Aucune demande pour l'instant.<br><span class="small">Partagez le lien de votre formulaire de demande.</span></div>`;
+        return;
+    }
+    const total     = records.length;
+    const nouvelles = records.filter(r=> (r.Statut||'')==='Nouvelle').length;
+    const surSite   = records.filter(r=> (r["Mode d'intervention"]||'')==='Sur site').length;
+    const sorted    = [...records].sort((a,b)=> String(b.Date||'').localeCompare(String(a.Date||'')));
+
+    box.innerHTML = `
+        <div class="kpi-grid">
+            ${kpi('Demandes reçues', total, 'au total')}
+            ${kpi('Nouvelles', nouvelles, 'à traiter')}
+            ${kpi('Sur site', surSite, 'déplacement requis')}
+        </div>
+        <div class="cards-grid">${sorted.map((r,i)=>demCard(r,i)).join('')}</div>`;
+    $$('.dem-card', box).forEach(c=> c.onclick=()=> openDemandeDetail(sorted[+c.dataset.i]));
+}
+
+function demTypes(r){ const t=r['Type de besoin']; return Array.isArray(t)?t:(t?[t]:[]); }
+function statutClass(s){ return s==='Traitée'?'accepte':(s==='Devis envoyé'?'facture':'envoye'); }
+
+function demCard(r,i){
+    const types  = demTypes(r);
+    const mode   = r["Mode d'intervention"]||'';
+    const statut = r.Statut||'Nouvelle';
+    return `<div class="client-card dem-card" data-i="${i}">
+        <div class="dem-card-head">
+            <h3>${esc(r['Société']||r.Contact||'—')}</h3>
+            <span class="badge ${statutClass(statut)}">${esc(statut)}</span>
+        </div>
+        ${types.length?`<div class="dem-tags">${types.map(t=>`<span class="badge facture">${esc(t)}</span>`).join('')}</div>`:''}
+        <div class="dem-meta">
+            ${mode?`<span class="badge ${mode==='Sur site'?'retard':'envoye'}">${mode==='Sur site'?'⚠ ':''}${esc(mode)}</span>`:''}
+            ${r['Délai souhaité']?`<span class="muted small">${esc(r['Délai souhaité'])}</span>`:''}
+            ${r.Date?`<span class="muted small">${frDate(String(r.Date).slice(0,10))}</span>`:''}
+        </div>
+    </div>`;
+}
+
+function openDemandeDetail(rec){
+    currentDemande = rec;
+    const types = demTypes(rec);
+    const row = (label,val)=> val ? `<div class="dd-row"><span class="dd-label">${label}</span><span class="dd-val">${esc(val)}</span></div>` : '';
+    $('#demandeDetailTitle').textContent = rec['Société']||rec.Contact||'Demande';
+    $('#demandeDetailBody').innerHTML = `
+        ${types.length?`<div class="dd-row"><span class="dd-label">Type de besoin</span><span class="dd-val">${types.map(t=>`<span class="badge facture">${esc(t)}</span>`).join(' ')}</span></div>`:''}
+        ${row('Statut', rec.Statut)}
+        ${row('Personne à contacter', rec.Contact)}
+        ${row('Email', rec.Email)}
+        ${row('Téléphone', rec['Téléphone'])}
+        ${row('Description', rec['Description du besoin'])}
+        ${row('Outils utilisés', rec['Outils utilisés'])}
+        ${row("Mode d'intervention", rec["Mode d'intervention"])}
+        ${row('Adresse du site', rec['Adresse du site'])}
+        ${row('Contact sur place', rec['Contact sur place'])}
+        ${row('Délai souhaité', rec['Délai souhaité'])}
+        ${row('Budget indicatif', rec['Budget indicatif'])}
+        ${row('Date', rec.Date?frDate(String(rec.Date).slice(0,10)):'')}`;
+    openModal('#demandeModal');
+}
+
+/* Conversion d'une demande en nouveau devis (crée le client au besoin) */
+function convertDemandeToDevis(rec){
+    if(!rec) return;
+    const email = (rec.Email||'').trim().toLowerCase();
+    const name  = (rec['Société']||rec.Contact||'').trim();
+    let cl = (email && DB.clients.find(c=> (c.email||'').trim().toLowerCase()===email))
+          || (name  && DB.clients.find(c=> (c.name||'').trim().toLowerCase()===name.toLowerCase()));
+    if(!cl){
+        cl = { id:uid('cl'), name:name||'Client', address:rec['Adresse du site']||'', siret:'',
+               contact:rec.Contact||'', email:rec.Email||'', phone:rec['Téléphone']||'' };
+        DB.clients.push(cl); save();
+        toast('Client « '+cl.name+' » créé', 'ok');
+    }
+    const besoins = demTypes(rec).join(', ');
+    const desc    = (rec['Description du besoin']||'').trim();
+    const { number, key, n } = nextNumber('devis');
+    pendingNumberKey = { key, n };
+    editing = {
+        id:null, type:'devis', number, status:'brouillon',
+        date: todayISO(), validity: DB.settings.validity,
+        dueDate:'', paidDate:'',
+        clientId: cl.id,
+        lines:[ { designation: (besoins || desc || 'Prestation'), qty:1, unit:'forfait', pu:0 } ],
+        notes: desc
+    };
+    closeModal('#demandeModal');
+    openDocModal();
+}
+
+function demHelp(){
+    return `<div class="card">
+        <div class="card-head"><h2>Activer les demandes d'intervention</h2></div>
+        <p class="muted">Recevez les demandes de vos prospects via un formulaire public. Elles sont enregistrées dans votre base Airtable (table « Demandes ») grâce au même relais Google Apps Script que la satisfaction.</p>
+        <ol class="sat-steps">
+            <li>Mettez à jour <code>google-apps-script/Code.gs</code> (v2), lancez une fois la fonction <code>setupDemandes</code>, puis redéployez une « Nouvelle version ».</li>
+            <li>Dans <b>Réglages → Satisfaction client</b>, l'« Endpoint de lecture des avis » doit être renseigné (il sert aussi aux demandes).</li>
+            <li>Dans <b>Réglages → Demandes d'intervention</b>, collez le lien public de <code>demande.html</code>.</li>
+            <li>Revenez ici : les demandes reçues s'afficheront.</li>
+        </ol>
+        <div class="settings-actions"><button class="btn btn-primary" id="demGoSettings">Aller dans les Réglages</button></div>
+    </div>`;
+}
+function bindDemHelp(){ const b=$('#demGoSettings'); if(b) b.onclick=()=>showView('settings'); }
+
+/* ---------- Copie presse-papier générique ---------- */
+function copyToClipboard(text){
+    if(!text){ toast('Rien à copier.', 'err'); return; }
+    if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(text).then(()=>toast('Lien copié', 'ok'), ()=>execCopy(text));
+    } else execCopy(text);
+}
+function execCopy(text){
+    const ta=document.createElement('textarea');
+    ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); toast('Lien copié', 'ok'); }
+    catch(e){ toast('Copie impossible.', 'err'); }
+    document.body.removeChild(ta);
+}
+
+/* ============================================================
    SATISFACTION CLIENT (avis via Airtable / Google Apps Script)
    ============================================================ */
 let satCache = null;   // mémorise les avis chargés pour éviter de refaire le fetch
@@ -734,6 +886,7 @@ function fillSettings(){
     $('#set-legal').value=s.legal; $('#set-validity').value=s.validity;
     $('#set-devprefix').value=s.devprefix; $('#set-facprefix').value=s.facprefix;
     $('#set-formurl').value=s.formurl||''; $('#set-satendpoint').value=s.satendpoint||'';
+    $('#set-demformurl').value=s.demandeFormUrl||'';
     renderLogoPreview(); updateNumPreview();
 }
 function renderLogoPreview(){
@@ -766,7 +919,8 @@ function saveSettings(){
     s.legal=$('#set-legal').value; s.validity=$('#set-validity').value;
     s.devprefix=$('#set-devprefix').value.trim()||'DEV'; s.facprefix=$('#set-facprefix').value.trim()||'FAC';
     s.formurl=$('#set-formurl').value.trim(); s.satendpoint=$('#set-satendpoint').value.trim();
-    satCache=null;   // l'endpoint a pu changer : on rechargera les avis
+    s.demandeFormUrl=$('#set-demformurl').value.trim();
+    satCache=null; demCache=null;   // l'endpoint a pu changer : on rechargera avis & demandes
     save(); refreshBrand(); toast('Réglages enregistrés', 'ok');
 }
 function refreshBrand(){
@@ -853,6 +1007,13 @@ function init(){
     $('#logoBtn').onclick = ()=> $('#logoFile').click();
     $('#logoFile').onchange = e=>{ if(e.target.files[0]) setLogo(e.target.files[0]); e.target.value=''; };
     $('#logoRemove').onclick = removeLogo;
+
+    // demandes d'intervention
+    $('#demRefresh').onclick  = ()=> renderDemandes(true);
+    $('#demFormLink').onclick = ()=>{ const v=(DB.settings.demandeFormUrl||'').trim();
+        if(!v){ toast("Renseignez le lien du formulaire dans Réglages.", 'err'); showView('settings'); return; }
+        copyToClipboard(v); };
+    $('#demConvert').onclick  = ()=> convertDemandeToDevis(currentDemande);
 
     // satisfaction
     $('#satRefresh').onclick  = ()=> renderSatisfaction(true);

@@ -14,6 +14,8 @@ serveur, aucun abonnement, aucune donnée envoyée à l'extérieur**.
 - **Bilan annuel** : CA facturé et encaissé par mois, par année, **export CSV** pour
   vos déclarations
 - **Clients** : carnet d'adresses réutilisable
+- **Demandes d'intervention** : formulaire public, réception des demandes,
+  conversion en devis en un clic (création automatique du client)
 - **Satisfaction client** : génération de liens d'avis, formulaire public à vos
   couleurs, note moyenne, taux de recommandation et répartition des notes
 - **Logo personnalisé** affiché en tête des devis et factures
@@ -69,7 +71,26 @@ garde votre clé Airtable secrète — **aucune donnée ne transite par ce site*
 > Tant que la constante `ENDPOINT` est vide, `satisfaction.html` tourne en
 > **mode démonstration** (rien n'est enregistré).
 
+## Demandes d'intervention
+
+Formulaire public `demande.html` permettant à un prospect de décrire son besoin
+(coordonnées, type de besoin, description, mode sur site / à distance, délai,
+budget). Les demandes arrivent dans la table Airtable **Demandes** via le **même
+relais** Apps Script que la satisfaction (même URL `…/exec`, routage par le champ
+`type`).
+
+Dans l'app, l'onglet **Demandes** affiche les KPI (reçues / nouvelles / sur site)
+et la liste ; depuis le détail d'une demande, le bouton **« → Convertir en devis »**
+crée le client si besoin et ouvre un nouveau devis pré-rempli.
+
+**Activation côté Apps Script :** remplacer le code par le nouveau
+`google-apps-script/Code.gs`, exécuter une fois la fonction **`setupDemandes`**
+(crée la table), redéployer une **« Nouvelle version »**, puis renseigner le lien
+du formulaire dans **Réglages → Demandes d'intervention**. Le jeton Airtable doit
+inclure le scope `schema.bases:write` pour `setupDemandes` (sinon créer la table à
+la main).
+
 ## Pile technique
 
 HTML / CSS / JavaScript natif, sans dépendance ni étape de build.
-La satisfaction client utilise Airtable + Google Apps Script (optionnel).
+La satisfaction et les demandes utilisent Airtable + Google Apps Script (optionnel).

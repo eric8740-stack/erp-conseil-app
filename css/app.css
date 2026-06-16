@@ -298,3 +298,16 @@ table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 .sat-review-foot{margin-top:4px}
 .sat-steps{margin:14px 0 6px;padding-left:20px;display:flex;flex-direction:column;gap:9px;color:var(--text-secondary);font-size:.9rem}
 .sat-steps li{padding-left:4px}
+
+/* ===================== Demandes d'intervention ===================== */
+.dem-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.dem-card-head h3{margin:0;min-width:0;overflow-wrap:anywhere}
+.dem-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.dem-tags .badge{font-size:.7rem}
+.dem-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.dd-row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.9rem}
+.dd-row:last-child{border-bottom:none}
+.dd-label{color:var(--text-muted);font-weight:600;font-size:.8rem}
+.dd-val{color:var(--text-primary);white-space:pre-wrap;overflow-wrap:anywhere}
+.dd-val .badge{margin:0 4px 4px 0}
+@media(max-width:560px){ .dd-row{grid-template-columns:1fr;gap:2px} }

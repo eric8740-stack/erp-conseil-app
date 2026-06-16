@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demande d'intervention — ERP Conseil</title>
+<meta name="description" content="Décrivez votre besoin : ERP Conseil vous recontacte rapidement.">
+<style>
+    /* ===== Formulaire de demande autonome — couleurs ERP Conseil ===== */
+    :root{
+        --bg-primary:#0a0a0f; --bg-card:#1a1a25; --bg-input:#12121a;
+        --text-primary:#f0f0f5; --text-secondary:#9595a8; --text-muted:#6b6b80;
+        --accent-1:#6366f1; --accent-2:#8b5cf6; --accent-3:#06b6d4;
+        --gradient:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);
+        --border:#2a2a3a; --amber:#f59e0b; --green:#10b981; --red:#ef4444;
+        --radius:14px; --radius-sm:9px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+        font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+        background:radial-gradient(1200px 600px at 50% -10%,rgba(99,102,241,.18),transparent),var(--bg-primary);
+        color:var(--text-primary);min-height:100vh;display:flex;align-items:center;justify-content:center;
+        padding:28px 16px;line-height:1.55;
+    }
+    .wrap{width:100%;max-width:620px}
+    .brand{text-align:center;margin-bottom:22px}
+    .brand-logo{font-size:1.6rem;font-weight:800}
+    .brand-logo .dot{background:var(--gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-sub{font-size:.72rem;text-transform:uppercase;letter-spacing:.18em;color:var(--text-muted);font-weight:600;margin-top:2px}
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    h1{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+    .lead{color:var(--text-secondary);font-size:.92rem;margin-bottom:18px}
+    .section-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent-2);font-weight:700;margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--border)}
+    .section-title.first{border-top:none;padding-top:0;margin-top:0}
+    .field{margin-bottom:16px}
+    .field > label{display:block;font-size:.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px}
+    .req{color:var(--accent-2)}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    input[type=text],input[type=email],textarea{
+        width:100%;padding:11px 13px;background:var(--bg-input);border:1px solid var(--border);
+        border-radius:var(--radius-sm);color:var(--text-primary);font-size:.92rem;font-family:inherit;transition:.2s;
+    }
+    input:focus,textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+    textarea{resize:vertical;min-height:96px}
+    /* chips multi-sélection */
+    .chips{display:flex;flex-wrap:wrap;gap:9px}
+    .chip{position:relative;cursor:pointer}
+    .chip input{position:absolute;opacity:0;pointer-events:none}
+    .chip span{display:inline-block;padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:30px;font-size:.86rem;color:var(--text-secondary);font-weight:600;transition:.2s}
+    .chip:hover span{border-color:var(--accent-2);color:var(--text-primary)}
+    .chip input:checked + span{background:linear-gradient(135deg,rgba(99,102,241,.28),rgba(139,92,246,.2));border-color:var(--accent-2);color:#fff}
+    /* boutons mono-choix */
+    .pick{display:flex;gap:10px;flex-wrap:wrap}
+    .pick-btn{flex:1;min-width:110px;padding:11px 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-weight:600;font-size:.88rem;font-family:inherit;cursor:pointer;transition:.2s}
+    .pick-btn:hover{border-color:var(--accent-2);color:var(--text-primary)}
+    .pick-btn.on{background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(139,92,246,.18));border-color:var(--accent-2);color:#fff}
+    .btn-submit{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--gradient);background-size:200% 200%;color:#fff;font-weight:700;font-size:.98rem;font-family:inherit;cursor:pointer;transition:.25s;margin-top:10px}
+    .btn-submit:hover{background-position:right center;transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.4)}
+    .btn-submit:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none}
+    .foot{text-align:center;font-size:.72rem;color:var(--text-muted);margin-top:18px}
+    .demo-banner{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:var(--amber);font-size:.8rem;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:18px}
+    .err-msg{color:var(--red);font-size:.82rem;margin-top:10px;min-height:1em;text-align:center}
+    .hidden{display:none}
+    /* écran de remerciement */
+    .thanks{text-align:center;padding:20px 6px}
+    .thanks .big{font-size:3rem;margin-bottom:14px}
+    .thanks h1{margin-bottom:10px}
+    .thanks p{color:var(--text-secondary);font-size:.95rem}
+    @media(max-width:560px){ .row2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="brand">
+        <div class="brand-logo">ERP <span class="dot">Conseil</span></div>
+        <div class="brand-sub">Demande d'intervention</div>
+    </div>
+
+    <!-- ===== Formulaire ===== -->
+    <div class="card" id="formCard">
+        <div class="demo-banner hidden" id="demoBanner">⚠ Mode démonstration : aucune adresse d'envoi configurée, votre demande ne sera pas enregistrée.</div>
+
+        <h1>Parlez-moi de votre besoin</h1>
+        <p class="lead">Décrivez simplement ce que vous aimeriez obtenir — pas besoin d'être technique. Je vous recontacte rapidement pour en discuter.</p>
+
+        <form id="demandeForm" novalidate>
+            <div class="section-title first">Vos coordonnées</div>
+            <div class="row2">
+                <div class="field"><label>Société / Nom <span class="req">*</span></label><input type="text" id="societe" placeholder="Votre société ou votre nom"></div>
+                <div class="field"><label>Personne à contacter</label><input type="text" id="contact" placeholder="Prénom Nom"></div>
+            </div>
+            <div class="row2">
+                <div class="field"><label>Email <span class="req">*</span></label><input type="email" id="email" placeholder="vous@exemple.fr" autocomplete="email"></div>
+                <div class="field"><label>Téléphone</label><input type="text" id="telephone" placeholder="06 12 34 56 78"></div>
+            </div>
+
+            <div class="section-title">Votre besoin</div>
+            <div class="field">
+                <label>Type de besoin (plusieurs choix possibles)</label>
+                <div class="chips" id="besoins">
+                    <label class="chip"><input type="checkbox" value="Tableau de bord Power BI"><span>Tableau de bord Power BI</span></label>
+                    <label class="chip"><input type="checkbox" value="Automatisation Excel / VBA"><span>Automatisation Excel / VBA</span></label>
+                    <label class="chip"><input type="checkbox" value="Correction d'un fichier existant"><span>Correction d'un fichier existant</span></label>
+                    <label class="chip"><input type="checkbox" value="Extraction / analyse de données (SQL)"><span>Extraction / analyse de données (SQL)</span></label>
+                    <label class="chip"><input type="checkbox" value="Formation"><span>Formation</span></label>
+                    <label class="chip"><input type="checkbox" value="Je ne sais pas trop"><span>Je ne sais pas trop</span></label>
+                </div>
+            </div>
+            <div class="field"><label for="description">Décrivez ce que vous aimeriez obtenir</label><textarea id="description" placeholder="Ex. : j'aimerais un tableau de bord qui suit mes ventes par mois, à partir de mes fichiers Excel…"></textarea></div>
+            <div class="field"><label for="outils">Outils que vous utilisez aujourd'hui</label><input type="text" id="outils" placeholder="Ex. : Excel, Access, un logiciel métier…"></div>
+
+            <div class="section-title">L'intervention</div>
+            <div class="field">
+                <label>Mode souhaité</label>
+                <div class="pick" id="mode">
+                    <button type="button" class="pick-btn" data-v="Sur site">🏢 Sur site</button>
+                    <button type="button" class="pick-btn" data-v="À distance">💻 À distance</button>
+                    <button type="button" class="pick-btn" data-v="Peu importe">🤷 Peu importe</button>
+                </div>
+            </div>
+            <div id="siteFields" class="hidden">
+                <div class="row2">
+                    <div class="field"><label>Adresse du site</label><input type="text" id="adresse" placeholder="Adresse où intervenir"></div>
+                    <div class="field"><label>Contact sur place</label><input type="text" id="contactsite" placeholder="Personne à voir sur place"></div>
+                </div>
+            </div>
+            <div class="field">
+                <label>Délai souhaité</label>
+                <div class="pick" id="delai">
+                    <button type="button" class="pick-btn" data-v="Urgent">⚡ Urgent</button>
+                    <button type="button" class="pick-btn" data-v="Sous 2 semaines">📅 Sous 2 semaines</button>
+                    <button type="button" class="pick-btn" data-v="Ce mois-ci">🗓 Ce mois-ci</button>
+                    <button type="button" class="pick-btn" data-v="Pas pressé">🌿 Pas pressé</button>
+                </div>
+            </div>
+            <div class="field"><label for="budget">Budget indicatif (facultatif)</label><input type="text" id="budget" placeholder="Ex. : autour de 500 €, à voir ensemble…"></div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">Envoyer ma demande</button>
+            <div class="err-msg" id="errMsg"></div>
+        </form>
+    </div>
+
+    <!-- ===== Remerciement ===== -->
+    <div class="card thanks hidden" id="thanksCard">
+        <div class="big">📨</div>
+        <h1>Demande envoyée, merci !</h1>
+        <p>J'ai bien reçu votre demande. Je reviens vers vous très vite pour en parler.</p>
+    </div>
+
+    <div class="foot">ERP Conseil · Eric Paysant — Entrepreneur individuel · Condat-sur-Vienne (87)</div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   CONFIGURATION
+   ENDPOINT = MÊME URL Apps Script /exec que satisfaction.html
+   (le relais route vers la table "Demandes" grâce à type:'demande').
+   ============================================================ */
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycbyALDkUAQmMrM3IMIquKP5oWPSWdywfQfmbmXgFV79ksBCTJ3KVh5ITKJBURwwZosjQAg/exec';
+
+if(!ENDPOINT) document.getElementById('demoBanner').classList.remove('hidden');
+
+/* ---------- Mode souhaité (mono-choix) + champs « sur site » ---------- */
+let mode = '';
+const modeEls = [...document.querySelectorAll('#mode .pick-btn')];
+modeEls.forEach(b => b.addEventListener('click', () => {
+    mode = b.dataset.v;
+    modeEls.forEach(x => x.classList.toggle('on', x === b));
+    document.getElementById('siteFields').classList.toggle('hidden', mode !== 'Sur site');
+}));
+
+/* ---------- Délai souhaité (mono-choix) ---------- */
+let delai = '';
+const delaiEls = [...document.querySelectorAll('#delai .pick-btn')];
+delaiEls.forEach(b => b.addEventListener('click', () => {
+    delai = b.dataset.v;
+    delaiEls.forEach(x => x.classList.toggle('on', x === b));
+}));
+
+/* ---------- Envoi ---------- */
+const form = document.getElementById('demandeForm');
+const errMsg = document.getElementById('errMsg');
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    errMsg.textContent = '';
+
+    const societe = document.getElementById('societe').value.trim();
+    const email   = document.getElementById('email').value.trim();
+    if(!societe){ errMsg.textContent = 'Merci d’indiquer votre société ou votre nom.'; return; }
+    if(!email){   errMsg.textContent = 'Merci d’indiquer votre email.'; return; }
+
+    const besoins = [...document.querySelectorAll('#besoins input:checked')].map(i => i.value);
+
+    const payload = {
+        type:        'demande',
+        societe:     societe,
+        contact:     document.getElementById('contact').value.trim(),
+        email:       email,
+        telephone:   document.getElementById('telephone').value.trim(),
+        besoins:     besoins,
+        description: document.getElementById('description').value.trim(),
+        outils:      document.getElementById('outils').value.trim(),
+        mode:        mode,
+        adresse:     mode === 'Sur site' ? document.getElementById('adresse').value.trim() : '',
+        contactsite: mode === 'Sur site' ? document.getElementById('contactsite').value.trim() : '',
+        delai:       delai,
+        budget:      document.getElementById('budget').value.trim(),
+        date:        new Date().toISOString().slice(0, 10)
+    };
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'Envoi…';
+
+    if(!ENDPOINT){ setTimeout(showThanks, 600); return; }   // mode démo
+
+    fetch(ENDPOINT, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },  // évite le preflight CORS
+        body: JSON.stringify(payload)
+    })
+    .then(showThanks)
+    .catch(() => {
+        btn.disabled = false; btn.textContent = 'Envoyer ma demande';
+        errMsg.textContent = 'Une erreur est survenue. Réessayez dans un instant.';
+    });
+});
+
+function showThanks(){
+    document.getElementById('formCard').classList.add('hidden');
+    document.getElementById('thanksCard').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+})();
+</script>
+</body>
+</html>

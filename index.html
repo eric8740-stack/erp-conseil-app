@@ -21,6 +21,7 @@
         <button class="nav-item active" data-view="dashboard"><span class="ico">▦</span> Tableau de bord</button>
         <button class="nav-item" data-view="devis"><span class="ico">✎</span> Devis</button>
         <button class="nav-item" data-view="factures"><span class="ico">🧾</span> Factures</button>
+        <button class="nav-item" data-view="demandes"><span class="ico">📨</span> Demandes</button>
         <button class="nav-item" data-view="bilan"><span class="ico">📊</span> Bilan</button>
         <button class="nav-item" data-view="satisfaction"><span class="ico">⭐</span> Satisfaction</button>
         <button class="nav-item" data-view="clients"><span class="ico">👥</span> Clients</button>
@@ -87,6 +88,18 @@
             </div>
         </header>
         <div class="table-wrap"><table class="data-table" id="facturesTable"></table></div>
+    </section>
+
+    <!-- ===== DEMANDES ===== -->
+    <section class="view" id="view-demandes">
+        <header class="view-head">
+            <div><h1>Demandes d'intervention</h1><p class="muted">Demandes reçues via votre formulaire public</p></div>
+            <div class="head-actions">
+                <button class="btn btn-outline" id="demFormLink">🔗 Lien du formulaire</button>
+                <button class="btn btn-outline" id="demRefresh">↻ Actualiser</button>
+            </div>
+        </header>
+        <div id="demBody"></div>
     </section>
 
     <!-- ===== BILAN ===== -->
@@ -182,6 +195,14 @@
                 <label class="full">Endpoint de lecture des avis (URL Apps Script <code>…/exec</code>)<input id="set-satendpoint" type="text" placeholder="https://script.google.com/macros/s/…/exec"></label>
             </div>
             <p class="muted small">Les avis sont enregistrés dans votre base Airtable via Google Apps Script (gratuit). Procédure : <code>google-apps-script/Code.gs</code>.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h2>Demandes d'intervention</h2></div>
+            <div class="form-grid">
+                <label class="full">Lien public du formulaire de demande (page <code>demande.html</code>)<input id="set-demformurl" type="text" placeholder="https://eric8740-stack.github.io/erp-conseil-app/demande.html"></label>
+            </div>
+            <p class="muted small">Les demandes utilisent le même endpoint que la satisfaction (réglage ci-dessus). La table « Demandes » doit être créée via la fonction <code>setupDemandes</code> dans Apps Script.</p>
         </div>
 
         <div class="settings-actions">
@@ -292,6 +313,19 @@
             <button class="btn btn-outline" data-close>Fermer</button>
             <button class="btn btn-secondary" id="rv-open">↗ Ouvrir</button>
             <button class="btn btn-primary" id="rv-copy">⧉ Copier le lien</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ DEMANDE — DÉTAIL (modal) ============ -->
+<div class="modal-overlay" id="demandeModal">
+    <div class="modal">
+        <div class="modal-head"><h2 id="demandeDetailTitle">Demande</h2><button class="modal-close" data-close>✕</button></div>
+        <div class="modal-body" id="demandeDetailBody"></div>
+        <div class="modal-foot">
+            <span class="spacer"></span>
+            <button class="btn btn-outline" data-close>Fermer</button>
+            <button class="btn btn-primary" id="demConvert">→ Convertir en devis</button>
         </div>
     </div>
 </div>
