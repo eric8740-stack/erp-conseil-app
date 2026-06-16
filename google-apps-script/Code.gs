@@ -26,7 +26,11 @@
  *      puis ignorez setupDemandes.)
  *  2) Collez TOUT ce fichier dans le projet Apps Script (remplace l'ancien).
  *  3) ⚙ Paramètres du projet → Propriétés du script :
- *     nom = AIRTABLE_TOKEN, valeur = votre jeton « pat… ».
+ *     - nom = AIRTABLE_TOKEN, valeur = votre jeton « pat… »
+ *     - nom = READ_KEY, valeur = une clé secrète de votre choix (ex. mot de passe).
+ *       La MÊME valeur doit être saisie dans l'app : Réglages → « Clé de lecture ».
+ *       (Sans clé correcte, les lectures renvoient { ok:false, error:'unauthorized' }.
+ *        Les ENVOIS des formulaires publics restent ouverts, sans clé.)
  *  4) Lancez UNE FOIS la fonction setupDemandes (menu Exécuter → setupDemandes,
  *     autorisez l'accès) pour créer la table "Demandes".
  *  5) Déployer → Gérer les déploiements → modifier → « Nouvelle version »
@@ -100,6 +104,10 @@ function doPost(e){
    LECTURE (doGet) — tri par Date desc, pagination
    ============================================================ */
 function doGet(e){
+  // Sécurité : la lecture exige la bonne clé (?key=). Propriété de script READ_KEY.
+  if(((e && e.parameter && e.parameter.key) || '') !== PropertiesService.getScriptProperties().getProperty('READ_KEY')){
+    return jsonOut_({ ok: false, error: 'unauthorized' });
+  }
   try{
     const table = (e && e.parameter && e.parameter.type === 'demande') ? T_DEMANDE : T_SATISF;
     let records = [];

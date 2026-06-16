@@ -39,7 +39,8 @@ const DEFAULTS = {
         counters:{},  // {DEV-2026: 1, FAC-2026: 1}
         formurl:'',       // URL publique de satisfaction.html (lien d'avis envoyé aux clients)
         satendpoint:'',   // URL Apps Script …/exec pour lire les avis ET les demandes (Airtable)
-        demandeFormUrl:'' // URL publique de demande.html (formulaire de demande d'intervention)
+        demandeFormUrl:'',// URL publique de demande.html (formulaire de demande d'intervention)
+        appKey:''         // clé de lecture (sécurité) — doit correspondre à READ_KEY côté Apps Script
     },
     clients:[
         {id:'cl_demo', name:'A3D Design', address:'', siret:'', contact:'', email:'', phone:''}
@@ -543,7 +544,7 @@ function renderDemandes(force){
 
     if(demCache && !force){ renderDemList(demCache); return; }
     box.innerHTML = `<div class="empty"><div class="big">⏳</div>Chargement des demandes…</div>`;
-    fetch(ep + (ep.includes('?')?'&':'?') + 'type=demande')
+    fetch(ep + (ep.includes('?')?'&':'?') + 'type=demande&key=' + encodeURIComponent(DB.settings.appKey||''))
         .then(r=>r.json())
         .then(data=>{
             const records = (data.records||[]).map(r=> r && r.fields ? r.fields : r);
@@ -784,7 +785,7 @@ function renderSatisfaction(force){
 
     if(satCache && !force){ renderSatStats(satCache); return; }       // déjà chargé
     box.innerHTML = `<div class="empty"><div class="big">⏳</div>Chargement des avis…</div>`;
-    fetch(ep)
+    fetch(ep + (ep.includes('?')?'&':'?') + 'key=' + encodeURIComponent(DB.settings.appKey||''))
         .then(r=>r.json())
         .then(data=>{
             const records = (data.records||[]).map(r=> r && r.fields ? r.fields : r);
@@ -1051,6 +1052,7 @@ function fillSettings(){
     $('#set-devprefix').value=s.devprefix; $('#set-facprefix').value=s.facprefix;
     $('#set-formurl').value=s.formurl||''; $('#set-satendpoint').value=s.satendpoint||'';
     $('#set-demformurl').value=s.demandeFormUrl||'';
+    $('#set-appkey').value=s.appKey||'';
     renderLogoPreview(); updateNumPreview();
 }
 function renderLogoPreview(){
@@ -1084,7 +1086,8 @@ function saveSettings(){
     s.devprefix=$('#set-devprefix').value.trim()||'DEV'; s.facprefix=$('#set-facprefix').value.trim()||'FAC';
     s.formurl=$('#set-formurl').value.trim(); s.satendpoint=$('#set-satendpoint').value.trim();
     s.demandeFormUrl=$('#set-demformurl').value.trim();
-    satCache=null; demCache=null;   // l'endpoint a pu changer : on rechargera avis & demandes
+    s.appKey=$('#set-appkey').value.trim();
+    satCache=null; demCache=null;   // endpoint/clé ont pu changer : on rechargera avis & demandes
     save(); refreshBrand(); toast('Réglages enregistrés', 'ok');
 }
 function refreshBrand(){
