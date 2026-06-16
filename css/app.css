@@ -143,7 +143,7 @@ th.amount{text-align:right}
 .modal-close{background:none;border:none;color:var(--text-muted);font-size:1.1rem;width:32px;height:32px;border-radius:8px}
 .modal-close:hover{background:var(--bg-card);color:var(--text-primary)}
 .modal-body{padding:24px;display:flex;flex-direction:column;gap:16px}
-.modal-foot{display:flex;gap:10px;align-items:center;padding:18px 24px;border-top:1px solid var(--border)}
+.modal-foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-end;padding:18px 24px;border-top:1px solid var(--border)}
 
 /* ---------- Lines editor ---------- */
 .lines-title{margin-top:6px}
