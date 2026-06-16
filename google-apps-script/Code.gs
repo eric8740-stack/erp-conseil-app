@@ -45,6 +45,13 @@ function doPost(e){
   try{
     const d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
 
+    // Mise à jour du statut d'une demande (archivage : « Traitée » / « Devis envoyé »)
+    if(d.type === 'demande-statut'){
+      if(!d.id) return jsonOut_({ ok: false, error: 'id manquant' });
+      airtableFetch_('PATCH', T_DEMANDE, '', { records: [{ id: d.id, fields: { 'Statut': d.statut || 'Traitée' } }], typecast: true });
+      return jsonOut_({ ok: true });
+    }
+
     if(d.type === 'demande'){
       const fields = {
         'Société':              d.societe     || '',
@@ -105,7 +112,7 @@ function doGet(e){
       offset  = res.offset || null;
     } while(offset);
 
-    return jsonOut_({ ok: true, records: records.map(function(r){ return r.fields; }) });
+    return jsonOut_({ ok: true, records: records.map(function(r){ return Object.assign({ id: r.id }, r.fields); }) });
   }catch(err){
     return jsonOut_({ ok: false, error: String(err), records: [] });
   }

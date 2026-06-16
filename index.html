@@ -96,6 +96,7 @@
             <div><h1>Demandes d'intervention</h1><p class="muted">Demandes reçues via votre formulaire public</p></div>
             <div class="head-actions">
                 <button class="btn btn-primary" id="demSendForm">📧 Envoyer le formulaire à…</button>
+                <button class="btn btn-outline" id="demToggleArchived" hidden>👁 Afficher les traitées</button>
                 <button class="btn btn-outline" id="demFormLink">🔗 Lien du formulaire</button>
                 <button class="btn btn-outline" id="demRefresh">↻ Actualiser</button>
             </div>
@@ -328,6 +329,7 @@
         <div class="modal-body" id="demandeDetailBody"></div>
         <div class="modal-foot">
             <span class="spacer"></span>
+            <button class="btn btn-outline" id="demMarkDone">✓ Marquer traitée</button>
             <button class="btn btn-outline" data-close>Fermer</button>
             <button class="btn btn-primary" id="demConvert">→ Convertir en devis</button>
         </div>

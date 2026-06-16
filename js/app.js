@@ -532,8 +532,9 @@ function exportCsv(){
    ============================================================ */
 let demCache = null;
 let currentDemande = null;
-const TYPE_BESOIN_LABEL = ['Tableau de bord Power BI','Automatisation Excel / VBA',
-    "Correction d'un fichier existant",'Extraction / analyse de données (SQL)','Formation','Je ne sais pas trop'];
+let demShowArchived = false;
+const DEM_ARCHIVED = ['Traitée','Devis envoyé'];                 // demandes « classées »
+const isDemArchived = r => DEM_ARCHIVED.includes(r.Statut||'');
 
 function renderDemandes(force){
     const box = $('#demBody');
@@ -554,22 +555,35 @@ function renderDemandes(force){
 
 function renderDemList(records){
     const box = $('#demBody');
+    const tgl = $('#demToggleArchived');
     if(!records.length){
+        if(tgl) tgl.hidden = true;
         box.innerHTML = `<div class="empty"><div class="big">📨</div>Aucune demande pour l'instant.<br><span class="small">Partagez le lien de votre formulaire de demande.</span></div>`;
         return;
     }
-    const total     = records.length;
+    const active    = records.filter(r=> !isDemArchived(r));
+    const archived  = records.filter(isDemArchived);
     const nouvelles = records.filter(r=> (r.Statut||'')==='Nouvelle').length;
-    const surSite   = records.filter(r=> (r["Mode d'intervention"]||'')==='Sur site').length;
-    const sorted    = [...records].sort((a,b)=> String(b.Date||'').localeCompare(String(a.Date||'')));
+    const surSite   = active.filter(r=> (r["Mode d'intervention"]||'')==='Sur site').length;
+
+    // bascule « afficher les traitées »
+    if(tgl){
+        if(archived.length){ tgl.hidden=false; tgl.textContent = demShowArchived ? '🙈 Masquer les traitées' : `👁 Afficher les traitées (${archived.length})`; }
+        else { tgl.hidden=true; demShowArchived=false; }
+    }
+
+    const shown  = demShowArchived ? records : active;
+    const sorted = [...shown].sort((a,b)=> String(b.Date||'').localeCompare(String(a.Date||'')));
 
     box.innerHTML = `
         <div class="kpi-grid">
-            ${kpi('Demandes reçues', total, 'au total')}
+            ${kpi('Demandes reçues', records.length, 'au total')}
             ${kpi('Nouvelles', nouvelles, 'à traiter')}
-            ${kpi('Sur site', surSite, 'déplacement requis')}
+            ${kpi('Sur site', surSite, 'à traiter, déplacement')}
         </div>
-        <div class="cards-grid">${sorted.map((r,i)=>demCard(r,i)).join('')}</div>`;
+        ${sorted.length
+            ? `<div class="cards-grid">${sorted.map((r,i)=>demCard(r,i)).join('')}</div>`
+            : `<div class="empty"><div class="big">✅</div>Toutes les demandes ont été traitées.<br><span class="small">Cliquez « Afficher les traitées » pour les revoir.</span></div>`}`;
     $$('.dem-card', box).forEach(c=> c.onclick=()=> openDemandeDetail(sorted[+c.dataset.i]));
 }
 
@@ -580,7 +594,7 @@ function demCard(r,i){
     const types  = demTypes(r);
     const mode   = r["Mode d'intervention"]||'';
     const statut = r.Statut||'Nouvelle';
-    return `<div class="client-card dem-card" data-i="${i}">
+    return `<div class="client-card dem-card${isDemArchived(r)?' dem-archived':''}" data-i="${i}">
         <div class="dem-card-head">
             <h3>${esc(r['Société']||r.Contact||'—')}</h3>
             <span class="badge ${statutClass(statut)}">${esc(statut)}</span>
@@ -613,6 +627,7 @@ function openDemandeDetail(rec){
         ${row('Délai souhaité', rec['Délai souhaité'])}
         ${row('Budget indicatif', rec['Budget indicatif'])}
         ${row('Date', rec.Date?frDate(String(rec.Date).slice(0,10)):'')}`;
+    $('#demMarkDone').hidden = isDemArchived(rec);
     openModal('#demandeModal');
 }
 
@@ -660,8 +675,29 @@ function convertDemandeToDevis(rec){
         lines: lines,
         notes: buildDemandeNote(rec, types, desc)    // note interne (non imprimée)
     };
+    postDemandeStatut(rec, 'Devis envoyé');           // archive la demande (si Apps Script à jour)
     closeModal('#demandeModal');
+    renderDemList(demCache||[]);                       // maj de la liste derrière la modale
     openDocModal();
+}
+
+/* Met à jour le statut d'une demande dans Airtable (archivage) + maj optimiste du cache */
+function postDemandeStatut(rec, statut){
+    const ep = (DB.settings.satendpoint||'').trim();
+    if(!ep || !rec || !rec.id) return false;          // pas d'id => Code.gs pas encore redéployé
+    rec.Statut = statut;
+    fetch(ep, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({ type:'demande-statut', id:rec.id, statut:statut }) }).catch(()=>{});
+    return true;
+}
+/* Bouton « Marquer traitée » du détail */
+function markDemandeTraitee(){
+    if(!currentDemande) return;
+    if(!currentDemande.id){ toast('Action indisponible : mettez à jour Code.gs puis redéployez.', 'err'); return; }
+    postDemandeStatut(currentDemande, 'Traitée');
+    closeModal('#demandeModal');
+    toast('Demande marquée « Traitée »', 'ok');
+    renderDemList(demCache||[]);
 }
 
 /* Première phrase d'un texte (pour un objet court) */
@@ -1147,6 +1183,8 @@ function init(){
         if(!v){ toast("Renseignez le lien du formulaire dans Réglages.", 'err'); showView('settings'); return; }
         copyToClipboard(v); };
     $('#demConvert').onclick  = ()=> convertDemandeToDevis(currentDemande);
+    $('#demMarkDone').onclick = markDemandeTraitee;
+    $('#demToggleArchived').onclick = ()=>{ demShowArchived=!demShowArchived; renderDemList(demCache||[]); };
 
     // satisfaction
     $('#satRefresh').onclick  = ()=> renderSatisfaction(true);

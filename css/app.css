@@ -301,6 +301,8 @@ table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 .sat-steps li{padding-left:4px}
 
 /* ===================== Demandes d'intervention ===================== */
+.dem-archived{opacity:.55}
+.dem-archived:hover{opacity:.85}
 .dem-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .dem-card-head h3{margin:0;min-width:0;overflow-wrap:anywhere}
 .dem-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
