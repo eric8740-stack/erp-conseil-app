@@ -386,16 +386,15 @@ function printDoc(){
             <td class="r">${euro((Number(l.qty)||0)*(Number(l.pu)||0))}</td>
         </tr>`).join('');
 
+    const objet = (editing.notes||'').trim();   // champ « notes » réutilisé comme objet sur le PDF
+
     $('#printArea').innerHTML = `
     <div class="doc-sheet">
-        <div class="doc-top">
-            <div class="doc-company">
-                ${s.logo?`<img class="doc-logo" src="${s.logo}" alt="logo">`:''}
-                <div class="dc-name">${escNameBrand(s.name)}</div>
-                <p>${esc(s.owner)}</p>
-                <p>${esc(s.address)}</p>
-                <p>SIRET : ${esc(s.siret)}</p>
-                <p>${esc(s.email)} · ${esc(s.phone)}</p>
+        <header class="doc-head">
+            <div class="dh-brand">
+                ${s.logo
+                    ? `<img class="doc-logo" src="${s.logo}" alt="${esc(s.name)}">`
+                    : `<div class="dc-name">${escNameBrand(s.name)}</div>`}
             </div>
             <div class="doc-meta">
                 <div class="dm-type">${isFac?'Facture':'Devis'}</div>
@@ -405,12 +404,19 @@ function printDoc(){
                 ${isFac && editing.dueDate ? `<p>Échéance : ${frDate(editing.dueDate)}</p>`:''}
                 ${isFac && editing.sourceDevis ? `<p>Réf. devis : ${esc(editing.sourceDevis)}</p>`:''}
             </div>
-        </div>
+        </header>
 
         <div class="doc-parties">
-            <div class="doc-client-box">
-                <div class="dcb-title">Client</div>
-                <div class="dcb-name">${esc(c.name||'—')}</div>
+            <div class="doc-party">
+                <div class="dp-title">Émetteur</div>
+                <p class="dp-strong">${esc(s.owner)}</p>
+                <p>${esc(s.address)}</p>
+                ${s.siret?`<p>SIRET : ${esc(s.siret)}</p>`:''}
+                <p>${esc(s.email)} · ${esc(s.phone)}</p>
+            </div>
+            <div class="doc-party doc-party-client">
+                <div class="dp-title">Client</div>
+                <p class="dp-strong">${esc(c.name||'—')}</p>
                 ${c.address?`<p>${esc(c.address)}</p>`:''}
                 ${c.siret?`<p>SIRET : ${esc(c.siret)}</p>`:''}
                 ${c.contact?`<p>${esc(c.contact)}</p>`:''}
@@ -418,7 +424,12 @@ function printDoc(){
             </div>
         </div>
 
+        ${objet?`<div class="doc-objet"><span class="do-label">Objet :</span> ${esc(objet)}</div>`:''}
+
         <table class="doc-table">
+            <colgroup>
+                <col class="c-num"><col class="c-desc"><col class="c-qty"><col class="c-unit"><col class="c-pu"><col class="c-tot">
+            </colgroup>
             <thead><tr><th>#</th><th>Désignation</th><th class="r">Qté</th><th>Unité</th><th class="r">P.U. HT</th><th class="r">Total HT</th></tr></thead>
             <tbody>${rows}</tbody>
         </table>
@@ -428,8 +439,8 @@ function printDoc(){
                 <tr><td class="tt-label">Total HT</td><td class="tt-val">${euro(total)}</td></tr>
                 <tr class="tt-net"><td>Net à payer</td><td class="tt-val">${euro(total)}</td></tr>
             </table>
+            <div class="doc-tva">${esc(s.tva)}</div>
         </div>
-        <div class="doc-tva">${esc(s.tva)}</div>
 
         <div class="doc-conditions">
             <h4>Conditions de règlement</h4>
@@ -439,7 +450,9 @@ function printDoc(){
         </div>
 
         ${!isFac ? `<div class="doc-sign">
-            <div class="ds-box">Date et signature du client précédées de la mention « Bon pour accord » :
+            <div class="ds-box">
+                <span class="ds-label">Bon pour accord</span>
+                <span class="ds-hint">Date et signature du client, précédées de la mention « Bon pour accord »</span>
                 <div class="ds-line"></div>
             </div>
         </div>`:''}

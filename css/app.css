@@ -207,44 +207,77 @@ th.amount{text-align:right}
 @media print{
     body *{visibility:hidden}
     #printArea,#printArea *{visibility:visible}
-    #printArea{display:block;position:absolute;inset:0;background:#fff;color:#111;padding:0}
-    @page{size:A4;margin:16mm}
+    #printArea{display:block;position:absolute;inset:0;background:#fff;color:#222}
+    @page{size:A4;margin:14mm}
 }
-/* Document sheet styling (also used for on-screen preview if needed) */
-.doc-sheet{font-family:'Inter',sans-serif;color:#111;background:#fff;max-width:780px;margin:0 auto;padding:0}
-.doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #6366f1;padding-bottom:16px;margin-bottom:8px}
-.doc-logo{max-height:64px;max-width:220px;object-fit:contain;margin-bottom:10px;display:block}
-.doc-company .dc-name{font-size:1.5rem;font-weight:800;color:#1a1a25}
-.doc-company .dc-name .dot{color:#8b5cf6}
-.doc-company p{font-size:.78rem;color:#444;margin-top:3px}
-.doc-meta{text-align:right}
-.doc-meta .dm-type{font-size:1.6rem;font-weight:800;letter-spacing:.05em;color:#6366f1;text-transform:uppercase}
-.doc-meta p{font-size:.8rem;color:#333;margin-top:4px}
-.doc-meta .dm-num{font-family:'JetBrains Mono',monospace;font-weight:600}
-.doc-parties{display:flex;justify-content:flex-end;margin:22px 0 18px}
-.doc-client-box{border:1px solid #ddd;border-radius:8px;padding:14px 18px;min-width:260px;background:#fafafa}
-.doc-client-box .dcb-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#888;font-weight:700;margin-bottom:6px}
-.doc-client-box .dcb-name{font-weight:700;font-size:1rem}
-.doc-client-box p{font-size:.82rem;color:#444;margin-top:2px}
-table.doc-table{width:100%;border-collapse:collapse;margin-top:6px}
-table.doc-table th{background:#1a1a25;color:#fff;font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;padding:9px 12px;text-align:left}
-table.doc-table th.r,table.doc-table td.r{text-align:right}
-table.doc-table td{padding:9px 12px;border-bottom:1px solid #eee;font-size:.86rem;color:#222}
+/* Feuille A4 — couleurs forcées à l'impression pour conserver bandeaux/dégradés */
+.doc-sheet{
+    font-family:'Inter',-apple-system,sans-serif;color:#222;background:#fff;
+    max-width:780px;margin:0 auto;font-size:12px;line-height:1.5;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
+.doc-sheet *{box-sizing:border-box}
+
+/* En-tête : logo / titre à gauche, méta à droite */
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:14px;border-bottom:2px solid #6366f1;margin-bottom:18px}
+.doc-logo{max-height:58px;max-width:230px;object-fit:contain;display:block}
+.dc-name{font-size:24px;font-weight:800;color:#1a1a25;letter-spacing:-.01em}
+.dc-name .dot{background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.doc-meta{text-align:right;flex-shrink:0}
+.doc-meta .dm-type{font-size:24px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.doc-meta p{font-size:11px;color:#555;margin-top:3px}
+.doc-meta .dm-num{font-family:'JetBrains Mono',monospace;font-weight:600;color:#222;font-size:12px}
+
+/* Émetteur / Client en deux colonnes, alignés en haut */
+.doc-parties{display:flex;gap:18px;margin-bottom:16px;align-items:stretch}
+.doc-party{flex:1;border:1px solid #e5e5e5;border-radius:8px;padding:12px 14px}
+.doc-party-client{background:#faf9ff;border-color:#e7e2fb}
+.dp-title{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#8b5cf6;font-weight:700;margin-bottom:6px}
+.doc-party p{font-size:11px;color:#555;margin-top:2px}
+.doc-party .dp-strong{font-size:12.5px;font-weight:700;color:#222}
+
+/* Objet */
+.doc-objet{font-size:12px;color:#222;margin-bottom:14px;padding:9px 12px;background:#f7f7fa;border-left:3px solid #8b5cf6;border-radius:4px}
+.doc-objet .do-label{font-weight:700}
+
+/* Tableau des lignes — largeurs fixes, montants insécables */
+table.doc-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:14px}
+table.doc-table col.c-num{width:4%}
+table.doc-table col.c-desc{width:44%}
+table.doc-table col.c-qty{width:8%}
+table.doc-table col.c-unit{width:12%}
+table.doc-table col.c-pu{width:16%}
+table.doc-table col.c-tot{width:16%}
+table.doc-table th{background:#1a1a25;color:#fff;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;padding:9px 10px;text-align:left}
+table.doc-table th.r{text-align:right}
+table.doc-table td{padding:9px 10px;border-bottom:1px solid #eee;font-size:11.5px;color:#222;vertical-align:top;overflow-wrap:break-word;word-wrap:break-word}
+table.doc-table td.r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
-.doc-totals{display:flex;justify-content:flex-end;margin-top:14px}
-.doc-totals table{border-collapse:collapse;min-width:280px}
-.doc-totals td{padding:7px 14px;font-size:.9rem}
+
+/* Totaux alignés à droite */
+.doc-totals{display:flex;flex-direction:column;align-items:flex-end;margin-bottom:22px}
+.doc-totals table{border-collapse:collapse;min-width:260px}
+.doc-totals td{padding:6px 14px;font-size:12px}
 .doc-totals .tt-label{color:#555}
-.doc-totals .tt-val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
-.doc-totals .tt-net td{border-top:2px solid #1a1a25;font-size:1.05rem;font-weight:800;padding-top:10px}
-.doc-tva{font-size:.78rem;color:#666;font-style:italic;text-align:right;margin-top:6px}
-.doc-conditions{margin-top:26px;border-top:1px solid #eee;padding-top:14px}
-.doc-conditions h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:5px}
-.doc-conditions p{font-size:.78rem;color:#444;margin-bottom:3px}
-.doc-sign{margin-top:30px;display:flex;justify-content:space-between;gap:30px}
-.doc-sign .ds-box{flex:1;font-size:.78rem;color:#444}
-.doc-sign .ds-line{margin-top:42px;border-top:1px solid #999}
-.doc-foot{margin-top:34px;border-top:1px solid #eee;padding-top:10px;font-size:.7rem;color:#999;text-align:center}
+.doc-totals .tt-val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.doc-totals .tt-net td{background:#f4f2fd;border-top:1px solid #e7e2fb;border-bottom:1px solid #e7e2fb;font-size:14px;font-weight:800;padding-top:9px;padding-bottom:9px}
+.doc-totals .tt-net .tt-val{background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.doc-tva{font-size:10px;color:#777;font-style:italic;text-align:right;margin-top:7px}
+
+/* Conditions de règlement */
+.doc-conditions{border-top:1px solid #e5e5e5;padding-top:12px;margin-bottom:18px}
+.doc-conditions h4{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:5px;font-weight:700}
+.doc-conditions p{font-size:10px;color:#555;margin-bottom:3px}
+
+/* Zone signature (devis uniquement) */
+.doc-sign{margin-bottom:20px}
+.doc-sign .ds-box{border:1px solid #e5e5e5;border-radius:8px;padding:12px 14px;max-width:320px}
+.doc-sign .ds-label{font-size:11px;font-weight:700;color:#222}
+.doc-sign .ds-hint{display:block;font-size:9.5px;color:#888;margin-top:2px}
+.doc-sign .ds-line{margin-top:34px;border-top:1px solid #bbb}
+
+/* Pied de page légal, centré */
+.doc-foot{border-top:1px solid #e5e5e5;padding-top:9px;font-size:9px;color:#999;text-align:center}
 
 /* ===================== Satisfaction ===================== */
 .stars{font-size:1.05rem;letter-spacing:1px;white-space:nowrap}
