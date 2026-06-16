@@ -208,7 +208,7 @@ th.amount{text-align:right}
     body *{visibility:hidden}
     #printArea,#printArea *{visibility:visible}
     #printArea{display:block;position:absolute;inset:0;background:#fff;color:#222}
-    @page{size:A4;margin:14mm}
+    @page{size:A4;margin:14mm 10mm}
 }
 /* Feuille A4 — couleurs forcées à l'impression pour conserver bandeaux/dégradés */
 .doc-sheet{
