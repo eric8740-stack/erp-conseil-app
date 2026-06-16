@@ -917,21 +917,19 @@ function updateSendDemandeBtn(){
     btn.disabled = !has;
     btn.title = has ? '' : "Ajoutez un email pour activer l'envoi";
 }
-/* Ouvre la messagerie (Outlook…) avec un email pré-rempli + lien du formulaire pré-rempli */
-function sendDemandeFormEmail(){
-    const email = $('#cl-email').value.trim();
-    if(!email){ toast("Ajoutez un email pour activer l'envoi.", 'err'); return; }
-    const name    = $('#cl-name').value.trim();
-    const contact = $('#cl-contact').value.trim();
-
-    // lien du formulaire + paramètres client (chaque valeur encodée)
+/* Construit le lien du formulaire pré-rempli (?societe=&contact=&email=) */
+function buildDemandeFormLink(name, contact, email){
     const base = (DB.settings.demandeFormUrl||'').trim() || 'https://eric8740-stack.github.io/erp-conseil-app/demande.html';
     const qs = [];
     if(name)    qs.push('societe=' + encodeURIComponent(name));
     if(contact) qs.push('contact=' + encodeURIComponent(contact));
     if(email)   qs.push('email='   + encodeURIComponent(email));
-    const link = base + (qs.length ? ((base.includes('?')?'&':'?') + qs.join('&')) : '');
+    return base + (qs.length ? ((base.includes('?')?'&':'?') + qs.join('&')) : '');
+}
 
+/* Ouvre la messagerie (Outlook…) avec un email pré-rempli + lien du formulaire pré-rempli */
+function openDemandeMail(name, contact, email){
+    const link  = buildDemandeFormLink(name, contact, email);
     const owner = DB.settings.owner || '';
     const phone = DB.settings.phone || '';
     const greet = contact || name || 'Madame, Monsieur';
@@ -954,6 +952,29 @@ function sendDemandeFormEmail(){
     window.location.href = 'mailto:' + email
         + '?subject=' + encodeURIComponent(subject)
         + '&body='    + encodeURIComponent(body);
+}
+
+/* Bouton de la fiche client (le client existe déjà) */
+function sendDemandeFormEmail(){
+    const email = $('#cl-email').value.trim();
+    if(!email){ toast("Ajoutez un email pour activer l'envoi.", 'err'); return; }
+    openDemandeMail($('#cl-name').value.trim(), $('#cl-contact').value.trim(), email);
+}
+
+/* Envoi à un prospect non encore client (onglet Demandes) — ne crée aucune fiche */
+function openSendFormModal(){
+    $('#sf-email').value=''; $('#sf-societe').value=''; $('#sf-contact').value='';
+    openModal('#sendFormModal');
+    setTimeout(()=>$('#sf-email').focus(), 50);
+}
+function sendFormFromModal(){
+    const email = $('#sf-email').value.trim();
+    if(!email){ toast('Indiquez une adresse email.', 'err'); return; }
+    closeModal('#sendFormModal');
+    openDemandeMail($('#sf-societe').value.trim(), $('#sf-contact').value.trim(), email);
+}
+function copyFormLinkFromModal(){
+    copyToClipboard(buildDemandeFormLink($('#sf-societe').value.trim(), $('#sf-contact').value.trim(), $('#sf-email').value.trim()));
 }
 function saveClient(){
     const name = $('#cl-name').value.trim();
@@ -1118,6 +1139,9 @@ function init(){
     $('#logoRemove').onclick = removeLogo;
 
     // demandes d'intervention
+    $('#demSendForm').onclick = openSendFormModal;
+    $('#sf-send').onclick      = sendFormFromModal;
+    $('#sf-copy').onclick      = copyFormLinkFromModal;
     $('#demRefresh').onclick  = ()=> renderDemandes(true);
     $('#demFormLink').onclick = ()=>{ const v=(DB.settings.demandeFormUrl||'').trim();
         if(!v){ toast("Renseignez le lien du formulaire dans Réglages.", 'err'); showView('settings'); return; }

@@ -95,6 +95,7 @@
         <header class="view-head">
             <div><h1>Demandes d'intervention</h1><p class="muted">Demandes reçues via votre formulaire public</p></div>
             <div class="head-actions">
+                <button class="btn btn-primary" id="demSendForm">📧 Envoyer le formulaire à…</button>
                 <button class="btn btn-outline" id="demFormLink">🔗 Lien du formulaire</button>
                 <button class="btn btn-outline" id="demRefresh">↻ Actualiser</button>
             </div>
@@ -329,6 +330,25 @@
             <span class="spacer"></span>
             <button class="btn btn-outline" data-close>Fermer</button>
             <button class="btn btn-primary" id="demConvert">→ Convertir en devis</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ ENVOYER LE FORMULAIRE À… (modal) ============ -->
+<div class="modal-overlay" id="sendFormModal">
+    <div class="modal">
+        <div class="modal-head"><h2>Envoyer le formulaire de demande</h2><button class="modal-close" data-close>✕</button></div>
+        <div class="modal-body">
+            <label class="full">Email du destinataire<input id="sf-email" type="email" placeholder="prospect@exemple.fr"></label>
+            <label class="full">Société (optionnel)<input id="sf-societe" type="text"></label>
+            <label class="full">Personne à contacter (optionnel)<input id="sf-contact" type="text"></label>
+            <p class="muted small">Ouvre votre messagerie avec un email pré-rempli (lien du formulaire inclus, lui-même pré-rempli). Aucun client n'est créé : il le sera automatiquement quand vous convertirez la demande reçue.</p>
+        </div>
+        <div class="modal-foot">
+            <span class="spacer"></span>
+            <button class="btn btn-outline" data-close>Annuler</button>
+            <button class="btn btn-outline" id="sf-copy">⧉ Copier le lien</button>
+            <button class="btn btn-primary" id="sf-send">📧 Ouvrir l'email</button>
         </div>
     </div>
 </div>
