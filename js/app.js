@@ -388,8 +388,6 @@ function printDoc(){
             <td class="r">${euro((Number(l.qty)||0)*(Number(l.pu)||0))}</td>
         </tr>`).join('');
 
-    const objet = (editing.notes||'').trim();   // champ « notes » réutilisé comme objet sur le PDF
-
     $('#printArea').innerHTML = `
     <div class="doc-sheet">
         <header class="doc-head">
@@ -425,8 +423,6 @@ function printDoc(){
                 ${c.email?`<p>${esc(c.email)}</p>`:''}
             </div>
         </div>
-
-        ${objet?`<div class="doc-objet"><span class="do-label">Objet :</span> ${esc(objet)}</div>`:''}
 
         <table class="doc-table">
             <colgroup>
@@ -615,21 +611,39 @@ function openDemandeDetail(rec){
     openModal('#demandeModal');
 }
 
-/* Conversion d'une demande en nouveau devis (crée le client au besoin) */
+/* Conversion d'une demande en nouveau devis (crée/complète le client) */
 function convertDemandeToDevis(rec){
     if(!rec) return;
     const email = (rec.Email||'').trim().toLowerCase();
     const name  = (rec['Société']||rec.Contact||'').trim();
+    const info = {
+        contact: (rec.Contact||'').trim(),
+        email:   (rec.Email||'').trim(),
+        phone:   (rec['Téléphone']||'').trim(),
+        address: (rec['Adresse du site']||'').trim()
+    };
     let cl = (email && DB.clients.find(c=> (c.email||'').trim().toLowerCase()===email))
           || (name  && DB.clients.find(c=> (c.name||'').trim().toLowerCase()===name.toLowerCase()));
     if(!cl){
-        cl = { id:uid('cl'), name:name||'Client', address:rec['Adresse du site']||'', siret:'',
-               contact:rec.Contact||'', email:rec.Email||'', phone:rec['Téléphone']||'' };
+        cl = { id:uid('cl'), name:name||'Client', address:info.address, siret:'',
+               contact:info.contact, email:info.email, phone:info.phone };
         DB.clients.push(cl); save();
         toast('Client « '+cl.name+' » créé', 'ok');
+    } else {
+        let changed = false;                            // ne complète que les champs vides
+        ['contact','email','phone','address'].forEach(f=>{
+            if(!((cl[f]||'').trim()) && info[f]){ cl[f]=info[f]; changed=true; }
+        });
+        if(changed){ save(); toast('Fiche client « '+cl.name+' » complétée', 'ok'); }
     }
-    const besoins = demTypes(rec).join(', ');
-    const desc    = (rec['Description du besoin']||'').trim();
+
+    // une ligne par type de besoin coché ; sinon une ligne avec la description
+    const types = demTypes(rec);
+    const desc  = (rec['Description du besoin']||'').trim();
+    const lines = types.length
+        ? types.map(t=> ({ designation:t, qty:1, unit:'forfait', pu:0 }))
+        : [ { designation:(desc || 'Prestation'), qty:1, unit:'forfait', pu:0 } ];
+
     const { number, key, n } = nextNumber('devis');
     pendingNumberKey = { key, n };
     editing = {
@@ -637,11 +651,44 @@ function convertDemandeToDevis(rec){
         date: todayISO(), validity: DB.settings.validity,
         dueDate:'', paidDate:'',
         clientId: cl.id,
-        lines:[ { designation: (besoins || desc || 'Prestation'), qty:1, unit:'forfait', pu:0 } ],
-        notes: desc
+        lines: lines,
+        notes: buildDemandeNote(rec, types, desc)    // note interne (non imprimée)
     };
     closeModal('#demandeModal');
     openDocModal();
+}
+
+/* Récapitulatif structuré de la demande → note interne du devis (champs renseignés seulement) */
+function buildDemandeNote(rec, types, desc){
+    const L = [];
+    const date = rec.Date ? frDate(String(rec.Date).slice(0,10)) : '';
+    L.push('Demande' + (date ? (' du ' + date) : ''));
+    const ct = [rec.Contact, rec.Email, rec['Téléphone']].map(x=>(x||'').trim()).filter(Boolean);
+    if(ct.length)    L.push('Contact : ' + ct.join(' · '));
+    if(types.length) L.push('Besoin(s) : ' + types.join(', '));
+    if(desc)         L.push('Description : ' + desc);
+    const outils = (rec['Outils utilisés']||'').trim();
+    if(outils)       L.push('Outils utilisés : ' + outils);
+    const mode = (rec["Mode d'intervention"]||'').trim();
+    if(mode){
+        let m = 'Mode : ' + mode;
+        if(mode === 'Sur site'){
+            const extra = [];
+            const adr = (rec['Adresse du site']||'').trim();
+            const cs  = (rec['Contact sur place']||'').trim();
+            if(adr) extra.push('Adresse : ' + adr);
+            if(cs)  extra.push('Contact sur place : ' + cs);
+            if(extra.length) m += ' — ' + extra.join(' · ');
+        }
+        L.push(m);
+    }
+    const db = [];
+    const delai  = (rec['Délai souhaité']||'').trim();
+    const budget = (rec['Budget indicatif']||'').trim();
+    if(delai)  db.push('Délai : ' + delai);
+    if(budget) db.push('Budget indicatif : ' + budget);
+    if(db.length) L.push(db.join(' · '));
+    return L.join('\n');
 }
 
 function demHelp(){
