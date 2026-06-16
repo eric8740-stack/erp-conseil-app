@@ -163,6 +163,13 @@ const ENDPOINT = 'https://script.google.com/macros/s/AKfycbzf_x0Q264sFriUASS5Xo1
 
 if(!ENDPOINT) document.getElementById('demoBanner').classList.remove('hidden');
 
+/* ---------- Pré-remplissage via l'URL (?societe=&contact=&email=) ---------- */
+const params = new URLSearchParams(location.search);
+[['societe','societe'],['contact','contact'],['email','email']].forEach(([id,key])=>{
+    const v = params.get(key);                 // URLSearchParams décode déjà les valeurs
+    if(v != null) document.getElementById(id).value = v;
+});
+
 /* ---------- Mode souhaité (mono-choix) + champs « sur site » ---------- */
 let mode = '';
 const modeEls = [...document.querySelectorAll('#mode .pick-btn')];

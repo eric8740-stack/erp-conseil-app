@@ -64,6 +64,7 @@ a,.link{color:var(--accent-2);text-decoration:none;background:none;border:none;f
 .btn-outline:hover{border-color:var(--accent-2);color:#fff}
 .btn-ghost-danger{background:transparent;color:var(--red);border-color:transparent}
 .btn-ghost-danger:hover{background:rgba(239,68,68,.12)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
 .spacer{flex:1}
 
 /* ---------- Inputs ---------- */

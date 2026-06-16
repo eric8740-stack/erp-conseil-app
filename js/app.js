@@ -908,6 +908,52 @@ function fillClientForm(){
     $('#cl-siret').value=editingClient.siret; $('#cl-contact').value=editingClient.contact;
     $('#cl-email').value=editingClient.email; $('#cl-phone').value=editingClient.phone;
     $('#deleteClient').hidden = !editingClient.id;
+    updateSendDemandeBtn();
+}
+/* Active le bouton d'envoi seulement si un email est présent */
+function updateSendDemandeBtn(){
+    const btn = $('#sendDemandeForm'); if(!btn) return;
+    const has = !!$('#cl-email').value.trim();
+    btn.disabled = !has;
+    btn.title = has ? '' : "Ajoutez un email pour activer l'envoi";
+}
+/* Ouvre la messagerie (Outlook…) avec un email pré-rempli + lien du formulaire pré-rempli */
+function sendDemandeFormEmail(){
+    const email = $('#cl-email').value.trim();
+    if(!email){ toast("Ajoutez un email pour activer l'envoi.", 'err'); return; }
+    const name    = $('#cl-name').value.trim();
+    const contact = $('#cl-contact').value.trim();
+
+    // lien du formulaire + paramètres client (chaque valeur encodée)
+    const base = (DB.settings.demandeFormUrl||'').trim() || 'https://eric8740-stack.github.io/erp-conseil-app/demande.html';
+    const qs = [];
+    if(name)    qs.push('societe=' + encodeURIComponent(name));
+    if(contact) qs.push('contact=' + encodeURIComponent(contact));
+    if(email)   qs.push('email='   + encodeURIComponent(email));
+    const link = base + (qs.length ? ((base.includes('?')?'&':'?') + qs.join('&')) : '');
+
+    const owner = DB.settings.owner || '';
+    const phone = DB.settings.phone || '';
+    const greet = contact || name || 'Madame, Monsieur';
+    const subject = "ERP Conseil — Votre demande d'intervention";
+    const body = [
+        'Bonjour ' + greet + ',',
+        '',
+        "Merci de l'intérêt porté à ERP Conseil.",
+        '',
+        "Pour cadrer votre besoin et vous proposer un devis adapté, pourriez-vous remplir cette courte fiche (2 minutes, pas besoin d'être technique) ; vos coordonnées y sont déjà pré-remplies :",
+        link,
+        '',
+        'Je reviens vers vous très rapidement.',
+        '',
+        'Bien cordialement,',
+        owner,
+        'ERP Conseil — ' + phone
+    ].join('\r\n');   // \r\n → %0D%0A après encodage
+
+    window.location.href = 'mailto:' + email
+        + '?subject=' + encodeURIComponent(subject)
+        + '&body='    + encodeURIComponent(body);
 }
 function saveClient(){
     const name = $('#cl-name').value.trim();
@@ -1060,6 +1106,8 @@ function init(){
     // éditeur client
     $('#saveClient').onclick   = saveClient;
     $('#deleteClient').onclick = deleteClient;
+    $('#sendDemandeForm').onclick = sendDemandeFormEmail;
+    $('#cl-email').oninput = updateSendDemandeBtn;
 
     // réglages
     $('#saveSettings').onclick = saveSettings;
