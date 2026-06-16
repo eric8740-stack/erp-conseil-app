@@ -36,7 +36,9 @@ const DEFAULTS = {
         validity:'1 mois',
         devprefix:'DEV',
         facprefix:'FAC',
-        counters:{}   // {DEV-2026: 1, FAC-2026: 1}
+        counters:{},  // {DEV-2026: 1, FAC-2026: 1}
+        formurl:'',     // URL publique de satisfaction.html (lien d'avis envoyé aux clients)
+        satendpoint:''  // URL Apps Script …/exec pour lire les avis (Airtable)
     },
     clients:[
         {id:'cl_demo', name:'A3D Design', address:'', siret:'', contact:'', email:'', phone:''}
@@ -99,6 +101,7 @@ function renderView(name){
     if(name==='devis')     renderDocList('devis');
     if(name==='factures')  renderDocList('facture');
     if(name==='bilan')     renderBilan();
+    if(name==='satisfaction') renderSatisfaction();
     if(name==='clients')   renderClients();
     if(name==='settings')  fillSettings();
 }
@@ -508,6 +511,138 @@ function exportCsv(){
 }
 
 /* ============================================================
+   SATISFACTION CLIENT (avis via Airtable / Google Apps Script)
+   ============================================================ */
+let satCache = null;   // mémorise les avis chargés pour éviter de refaire le fetch
+
+function renderSatisfaction(force){
+    const box = $('#satBody');
+    const ep  = (DB.settings.satendpoint||'').trim();
+    if(!ep){ box.innerHTML = satHelp(); bindSatHelp(); return; }      // endpoint non configuré → aide
+
+    if(satCache && !force){ renderSatStats(satCache); return; }       // déjà chargé
+    box.innerHTML = `<div class="empty"><div class="big">⏳</div>Chargement des avis…</div>`;
+    fetch(ep)
+        .then(r=>r.json())
+        .then(data=>{
+            const records = (data.records||[]).map(r=> r && r.fields ? r.fields : r);
+            satCache = records;
+            renderSatStats(records);
+        })
+        .catch(()=>{ box.innerHTML = `<div class="empty"><div class="big">⚠</div>Impossible de charger les avis.<br><span class="small">Vérifiez l'URL de l'endpoint dans Réglages.</span></div>`; });
+}
+
+function renderSatStats(records){
+    const box = $('#satBody');
+    if(!records.length){
+        box.innerHTML = `<div class="empty"><div class="big">⭐</div>Aucun avis pour l'instant.<br><span class="small">Générez un lien d'avis et envoyez-le à vos clients après une mission.</span></div>`;
+        return;
+    }
+    const notes   = records.map(r=> Number(r['Note globale'])||0).filter(n=>n>0);
+    const avg     = notes.length ? notes.reduce((a,b)=>a+b,0)/notes.length : 0;
+    const reco    = records.filter(r=> (r.Recommandation||'')==='Oui').length;
+    const recoPct = records.length ? Math.round(reco/records.length*100) : 0;
+    const toPub   = records.filter(r=> r['Publier sur le site']===true).length;
+
+    const dist=[0,0,0,0,0];                                            // répartition 1→5
+    notes.forEach(n=>{ const i=Math.min(5,Math.max(1,Math.round(n)))-1; dist[i]++; });
+    const maxD = Math.max(1,...dist);
+
+    box.innerHTML = `
+        <div class="kpi-grid">
+            ${kpi('Note moyenne', `${stars(avg)} <span class="sat-avg">${avg.toFixed(1)}/5</span>`, `${notes.length} avis noté(s)`)}
+            ${kpi("Nombre d'avis", records.length, `${toPub} à publier sur le site`)}
+            ${kpi('Recommandation', recoPct+' %', `${reco} client(s) recommandent`)}
+        </div>
+        <div class="card">
+            <div class="card-head"><h2>Répartition des notes</h2></div>
+            ${[5,4,3,2,1].map(s=>{ const c=dist[s-1]; const w=Math.round(c/maxD*100);
+                return `<div class="sat-bar-row"><span class="sat-bar-label">${s} ★</span><div class="sat-bar"><div class="sat-bar-fill" style="width:${w}%"></div></div><span class="sat-bar-count">${c}</span></div>`;
+            }).join('')}
+        </div>
+        <div class="card">
+            <div class="card-head"><h2>Derniers avis</h2></div>
+            <div class="sat-list">${records.slice(0,30).map(satReviewRow).join('')}</div>
+        </div>`;
+}
+
+function satReviewRow(r){
+    const note = Number(r['Note globale'])||0;
+    const date = r.Date ? frDate(String(r.Date).slice(0,10)) : '';
+    const pub  = r['Publier sur le site']===true;
+    return `<div class="sat-review">
+        <div class="sat-review-head">
+            <div class="mini-info"><strong>${esc(r.Client||'Client')}</strong>${r.Mission?` · <span class="muted small">${esc(r.Mission)}</span>`:''}</div>
+            <div class="sat-review-meta">${stars(note)}${pub?' <span class="badge accepte">À publier</span>':''}</div>
+        </div>
+        ${r.Commentaire?`<p class="sat-comment">« ${esc(r.Commentaire)} »</p>`:''}
+        <div class="sat-review-foot muted small">${r.Recommandation?`Recommande : ${esc(r.Recommandation)}`:''}${date?` · ${date}`:''}${r.Email?` · ${esc(r.Email)}`:''}</div>
+    </div>`;
+}
+
+function stars(n){
+    const full = Math.round(Number(n)||0);
+    let s='';
+    for(let i=1;i<=5;i++) s += `<span class="star${i<=full?' on':''}">★</span>`;
+    return `<span class="stars">${s}</span>`;
+}
+
+function satHelp(){
+    return `<div class="card">
+        <div class="card-head"><h2>Activer la satisfaction client</h2></div>
+        <p class="muted">Recueillez l'avis de vos clients après chaque mission. Les réponses sont enregistrées dans votre base Airtable via un petit script Google (gratuit) — aucune donnée ne transite par ce site.</p>
+        <ol class="sat-steps">
+            <li>Ouvrez le fichier <code>google-apps-script/Code.gs</code> du dépôt et suivez les 4 étapes d'installation (jeton Airtable, script, propriété <code>AIRTABLE_TOKEN</code>, déploiement en application web).</li>
+            <li>Copiez l'URL de déploiement qui se termine par <code>/exec</code>.</li>
+            <li>Dans <b>Réglages → Satisfaction client</b> : collez cette URL dans « Endpoint de lecture des avis », l'adresse de <code>satisfaction.html</code> dans « URL du formulaire d'avis », puis enregistrez.</li>
+            <li>Revenez ici : note moyenne, taux de recommandation et avis s'afficheront.</li>
+        </ol>
+        <div class="settings-actions"><button class="btn btn-primary" id="satGoSettings">Aller dans les Réglages</button></div>
+    </div>`;
+}
+function bindSatHelp(){ const b=$('#satGoSettings'); if(b) b.onclick=()=>showView('settings'); }
+
+/* ---------- Génération d'un lien d'avis ---------- */
+function buildReviewUrl(clientName, mission){
+    const base = (DB.settings.formurl||'').trim();
+    if(!base) return '';
+    const u = base.split('#')[0];
+    const params = [];
+    if(clientName) params.push('client='+encodeURIComponent(clientName));
+    if(mission)    params.push('mission='+encodeURIComponent(mission));
+    if(!params.length) return u;
+    return u + (u.includes('?') ? '&' : '?') + params.join('&');
+}
+function openReviewModal(clientId, mission){
+    if(!(DB.settings.formurl||'').trim()){
+        toast("Renseignez d'abord l'URL du formulaire dans Réglages.", 'err');
+        showView('settings'); return;
+    }
+    const sel = $('#rv-client');
+    sel.innerHTML = DB.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    if(clientId) sel.value = clientId;
+    $('#rv-mission').value = mission || '';
+    updateReviewUrl();
+    openModal('#reviewModal');
+}
+function updateReviewUrl(){
+    const c = clientById($('#rv-client').value);
+    $('#rv-url').value = buildReviewUrl(c?c.name:'', $('#rv-mission').value.trim());
+}
+function copyReviewLink(){
+    const v = $('#rv-url').value;
+    if(!v){ toast('Lien indisponible.', 'err'); return; }
+    if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(v).then(()=>toast('Lien copié', 'ok'), fallbackCopyReview);
+    } else fallbackCopyReview();
+}
+function fallbackCopyReview(){
+    const ta=$('#rv-url'); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); toast('Lien copié', 'ok'); }
+    catch(e){ toast('Copie impossible — sélectionnez le lien manuellement.', 'err'); }
+}
+
+/* ============================================================
    CLIENTS
    ============================================================ */
 function renderClients(){
@@ -585,6 +720,7 @@ function fillSettings(){
     $('#set-tva').value=s.tva; $('#set-payterms').value=s.payterms;
     $('#set-legal').value=s.legal; $('#set-validity').value=s.validity;
     $('#set-devprefix').value=s.devprefix; $('#set-facprefix').value=s.facprefix;
+    $('#set-formurl').value=s.formurl||''; $('#set-satendpoint').value=s.satendpoint||'';
     renderLogoPreview(); updateNumPreview();
 }
 function renderLogoPreview(){
@@ -616,6 +752,8 @@ function saveSettings(){
     s.tva=$('#set-tva').value; s.payterms=$('#set-payterms').value;
     s.legal=$('#set-legal').value; s.validity=$('#set-validity').value;
     s.devprefix=$('#set-devprefix').value.trim()||'DEV'; s.facprefix=$('#set-facprefix').value.trim()||'FAC';
+    s.formurl=$('#set-formurl').value.trim(); s.satendpoint=$('#set-satendpoint').value.trim();
+    satCache=null;   // l'endpoint a pu changer : on rechargera les avis
     save(); refreshBrand(); toast('Réglages enregistrés', 'ok');
 }
 function refreshBrand(){
@@ -687,6 +825,7 @@ function init(){
     $('#deleteDoc').onclick = deleteDoc;
     $('#printDoc').onclick  = printDoc;
     $('#convertDoc').onclick= convertToFacture;
+    $('#reviewLinkDoc').onclick = ()=> openReviewModal(editing.clientId, editing.number||'');
     $('#doc-client').onchange = e=>{ if(e.target.value==='__new'){ newClient(true);} else { editing.clientId=e.target.value; } };
     $('#doc-status').onchange = updatePaidVisibility;
 
@@ -702,6 +841,14 @@ function init(){
     $('#logoFile').onchange = e=>{ if(e.target.files[0]) setLogo(e.target.files[0]); e.target.value=''; };
     $('#logoRemove').onclick = removeLogo;
 
+    // satisfaction
+    $('#satRefresh').onclick  = ()=> renderSatisfaction(true);
+    $('#satNewLink').onclick  = ()=> openReviewModal(DB.clients[0]?.id, '');
+    $('#rv-client').onchange  = updateReviewUrl;
+    $('#rv-mission').oninput  = updateReviewUrl;
+    $('#rv-copy').onclick     = copyReviewLink;
+    $('#rv-open').onclick     = ()=>{ const v=$('#rv-url').value; if(v) window.open(v,'_blank'); };
+
     // bilan
     $('#bilanYear').onchange = renderBilan;
     $('#exportCsv').onclick  = exportCsv;
@@ -710,8 +857,8 @@ function init(){
     $('#importFile').onchange = e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
     $('#resetData').onclick = resetData;
 
-    // fermeture modales
-    $$('[data-close]').forEach(b=> b.onclick = ()=>{ closeModal('#docModal'); closeModal('#clientModal'); });
+    // fermeture modales (ferme la modale parente du bouton, quelle qu'elle soit)
+    $$('[data-close]').forEach(b=> b.onclick = ()=> b.closest('.modal-overlay').classList.remove('open'));
     $$('.modal-overlay').forEach(o=> o.onclick = e=>{ if(e.target===o) o.classList.remove('open'); });
     document.addEventListener('keydown', e=>{ if(e.key==='Escape') $$('.modal-overlay').forEach(o=>o.classList.remove('open')); });
 

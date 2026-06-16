@@ -245,3 +245,23 @@ table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 .doc-sign .ds-box{flex:1;font-size:.78rem;color:#444}
 .doc-sign .ds-line{margin-top:42px;border-top:1px solid #999}
 .doc-foot{margin-top:34px;border-top:1px solid #eee;padding-top:10px;font-size:.7rem;color:#999;text-align:center}
+
+/* ===================== Satisfaction ===================== */
+.stars{font-size:1.05rem;letter-spacing:1px;white-space:nowrap}
+.stars .star{color:#3a3a4a}
+.stars .star.on{color:var(--amber)}
+.sat-avg{font-size:1rem;color:var(--text-secondary);font-weight:700;margin-left:4px}
+.sat-bar-row{display:grid;grid-template-columns:46px 1fr 34px;align-items:center;gap:12px;margin-bottom:9px}
+.sat-bar-row:last-child{margin-bottom:0}
+.sat-bar-label{font-size:.82rem;color:var(--text-secondary);font-weight:600}
+.sat-bar{height:10px;background:var(--bg-primary);border-radius:30px;overflow:hidden}
+.sat-bar-fill{height:100%;background:var(--gradient);border-radius:30px;transition:width .4s ease}
+.sat-bar-count{font-size:.82rem;color:var(--text-muted);text-align:right;font-variant-numeric:tabular-nums}
+.sat-list{display:flex;flex-direction:column;gap:14px}
+.sat-review{border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;background:var(--bg-primary)}
+.sat-review-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.sat-review-meta{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.sat-comment{font-size:.9rem;color:var(--text-primary);margin:8px 0;font-style:italic}
+.sat-review-foot{margin-top:4px}
+.sat-steps{margin:14px 0 6px;padding-left:20px;display:flex;flex-direction:column;gap:9px;color:var(--text-secondary);font-size:.9rem}
+.sat-steps li{padding-left:4px}

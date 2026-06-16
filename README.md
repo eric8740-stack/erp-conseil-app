@@ -14,6 +14,8 @@ serveur, aucun abonnement, aucune donnée envoyée à l'extérieur**.
 - **Bilan annuel** : CA facturé et encaissé par mois, par année, **export CSV** pour
   vos déclarations
 - **Clients** : carnet d'adresses réutilisable
+- **Satisfaction client** : génération de liens d'avis, formulaire public à vos
+  couleurs, note moyenne, taux de recommandation et répartition des notes
 - **Logo personnalisé** affiché en tête des devis et factures
 - **Export PDF** professionnel (impression navigateur) conforme à votre modèle et
   aux mentions légales EI (TVA non applicable, art. 293 B du CGI)
@@ -38,6 +40,36 @@ Pour changer d'ordinateur : exportez d'un côté, importez de l'autre.
 > votre navigateur. Pour générer un PDF, utilisez « Aperçu / PDF » puis
 > « Enregistrer au format PDF » dans la boîte d'impression.
 
+## Satisfaction client (avis)
+
+Le recueil d'avis est **optionnel** et désactivé par défaut. Les réponses sont
+stockées dans **votre** base Airtable, via un petit script Google (gratuit) qui
+garde votre clé Airtable secrète — **aucune donnée ne transite par ce site**.
+
+**Fichiers concernés**
+
+- `satisfaction.html` — formulaire public d'avis (notation 5 étoiles,
+  recommandation, commentaire, email facultatif, consentement de publication).
+  Pré-remplissable via l'URL : `satisfaction.html?client=…&mission=…`.
+- `google-apps-script/Code.gs` — relais sécurisé Apps Script ↔ Airtable
+  (`doPost` enregistre un avis, `doGet` renvoie les avis triés par date).
+
+**Activation (résumé)**
+
+1. Suivez les **4 étapes** détaillées en tête de `google-apps-script/Code.gs`
+   (jeton Airtable, collage du script, propriété `AIRTABLE_TOKEN`, déploiement
+   en application web « Tout le monde »).
+2. Copiez l'URL de déploiement `…/exec` et collez-la :
+   - dans **Réglages → Satisfaction client → Endpoint de lecture des avis** ;
+   - dans la constante `ENDPOINT` de `satisfaction.html`.
+3. Renseignez aussi l'**URL du formulaire** (`…/satisfaction.html`) dans les
+   Réglages pour générer des liens d'avis (bouton « ⭐ Lien d'avis » sur chaque
+   devis/facture, ou « Générer un lien d'avis » dans l'onglet Satisfaction).
+
+> Tant que la constante `ENDPOINT` est vide, `satisfaction.html` tourne en
+> **mode démonstration** (rien n'est enregistré).
+
 ## Pile technique
 
 HTML / CSS / JavaScript natif, sans dépendance ni étape de build.
+La satisfaction client utilise Airtable + Google Apps Script (optionnel).

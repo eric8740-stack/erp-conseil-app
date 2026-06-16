@@ -22,6 +22,7 @@
         <button class="nav-item" data-view="devis"><span class="ico">✎</span> Devis</button>
         <button class="nav-item" data-view="factures"><span class="ico">🧾</span> Factures</button>
         <button class="nav-item" data-view="bilan"><span class="ico">📊</span> Bilan</button>
+        <button class="nav-item" data-view="satisfaction"><span class="ico">⭐</span> Satisfaction</button>
         <button class="nav-item" data-view="clients"><span class="ico">👥</span> Clients</button>
         <button class="nav-item" data-view="settings"><span class="ico">⚙</span> Réglages</button>
     </nav>
@@ -104,6 +105,18 @@
         </div>
     </section>
 
+    <!-- ===== SATISFACTION ===== -->
+    <section class="view" id="view-satisfaction">
+        <header class="view-head">
+            <div><h1>Satisfaction client</h1><p class="muted">Avis recueillis auprès de vos clients après chaque mission</p></div>
+            <div class="head-actions">
+                <button class="btn btn-outline" id="satRefresh">⟳ Actualiser</button>
+                <button class="btn btn-primary" id="satNewLink">⭐ Générer un lien d'avis</button>
+            </div>
+        </header>
+        <div id="satBody"></div>
+    </section>
+
     <!-- ===== CLIENTS ===== -->
     <section class="view" id="view-clients">
         <header class="view-head">
@@ -160,6 +173,15 @@
                 <label>Préfixe factures<input id="set-facprefix" type="text"></label>
             </div>
             <p class="muted small">Format généré : <code id="numPreview"></code></p>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h2>Satisfaction client</h2></div>
+            <div class="form-grid">
+                <label class="full">URL du formulaire d'avis (page <code>satisfaction.html</code>)<input id="set-formurl" type="text" placeholder="https://eric8740-stack.github.io/erp-conseil-app/satisfaction.html"></label>
+                <label class="full">Endpoint de lecture des avis (URL Apps Script <code>…/exec</code>)<input id="set-satendpoint" type="text" placeholder="https://script.google.com/macros/s/…/exec"></label>
+            </div>
+            <p class="muted small">Les avis sont enregistrés dans votre base Airtable via Google Apps Script (gratuit). Procédure : <code>google-apps-script/Code.gs</code>.</p>
         </div>
 
         <div class="settings-actions">
@@ -225,6 +247,7 @@
             <span class="spacer"></span>
             <button class="btn btn-outline" data-close>Annuler</button>
             <button class="btn btn-outline" id="convertDoc" hidden>→ Convertir en facture</button>
+            <button class="btn btn-outline" id="reviewLinkDoc">⭐ Lien d'avis</button>
             <button class="btn btn-secondary" id="printDoc">🖨 Aperçu / PDF</button>
             <button class="btn btn-primary" id="saveDoc">Enregistrer</button>
         </div>
@@ -250,6 +273,25 @@
             <span class="spacer"></span>
             <button class="btn btn-outline" data-close>Annuler</button>
             <button class="btn btn-primary" id="saveClient">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ REVIEW LINK (modal) ============ -->
+<div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+        <div class="modal-head"><h2>Lien d'avis client</h2><button class="modal-close" data-close>✕</button></div>
+        <div class="modal-body">
+            <label class="full">Client<select id="rv-client"></select></label>
+            <label class="full">Mission / objet de l'avis<input id="rv-mission" type="text" placeholder="Ex. Tableau de bord Power BI"></label>
+            <label class="full">Lien à partager avec le client<textarea id="rv-url" rows="3" readonly></textarea></label>
+            <p class="muted small">Envoyez ce lien à votre client (email, message). Il ouvrira un formulaire d'avis pré-rempli à vos couleurs.</p>
+        </div>
+        <div class="modal-foot">
+            <span class="spacer"></span>
+            <button class="btn btn-outline" data-close>Fermer</button>
+            <button class="btn btn-secondary" id="rv-open">↗ Ouvrir</button>
+            <button class="btn btn-primary" id="rv-copy">⧉ Copier le lien</button>
         </div>
     </div>
 </div>

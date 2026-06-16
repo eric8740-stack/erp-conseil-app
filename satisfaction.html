@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Votre avis — ERP Conseil</title>
+<meta name="description" content="Donnez votre avis sur la mission réalisée par ERP Conseil.">
+<style>
+    /* ===== Formulaire d'avis autonome — couleurs ERP Conseil ===== */
+    :root{
+        --bg-primary:#0a0a0f; --bg-card:#1a1a25; --bg-input:#12121a;
+        --text-primary:#f0f0f5; --text-secondary:#9595a8; --text-muted:#6b6b80;
+        --accent-1:#6366f1; --accent-2:#8b5cf6; --accent-3:#06b6d4;
+        --gradient:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);
+        --border:#2a2a3a; --amber:#f59e0b; --green:#10b981; --red:#ef4444;
+        --radius:14px; --radius-sm:9px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+        font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+        background:radial-gradient(1200px 600px at 50% -10%,rgba(99,102,241,.18),transparent),var(--bg-primary);
+        color:var(--text-primary);min-height:100vh;display:flex;align-items:center;justify-content:center;
+        padding:28px 16px;line-height:1.55;
+    }
+    .wrap{width:100%;max-width:560px}
+    .brand{text-align:center;margin-bottom:22px}
+    .brand-logo{font-size:1.6rem;font-weight:800}
+    .brand-logo .dot{background:var(--gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-sub{font-size:.72rem;text-transform:uppercase;letter-spacing:.18em;color:var(--text-muted);font-weight:600;margin-top:2px}
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    h1{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+    .lead{color:var(--text-secondary);font-size:.92rem;margin-bottom:8px}
+    .mission-chip{display:inline-block;margin-bottom:20px;font-size:.8rem;color:var(--accent-2);background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);padding:5px 12px;border-radius:30px}
+    .field{margin-bottom:20px}
+    .field > label{display:block;font-size:.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px}
+    .req{color:var(--accent-2)}
+    input[type=text],input[type=email],textarea{
+        width:100%;padding:11px 13px;background:var(--bg-input);border:1px solid var(--border);
+        border-radius:var(--radius-sm);color:var(--text-primary);font-size:.92rem;font-family:inherit;transition:.2s;
+    }
+    input:focus,textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+    textarea{resize:vertical;min-height:90px}
+    /* étoiles */
+    .stars{display:flex;gap:8px;font-size:2.1rem;line-height:1}
+    .stars .star{cursor:pointer;color:#3a3a4a;transition:transform .12s,color .12s;user-select:none}
+    .stars .star:hover{transform:scale(1.12)}
+    .stars .star.on{color:var(--amber)}
+    .stars-hint{font-size:.8rem;color:var(--text-muted);margin-top:7px;min-height:1.1em}
+    /* recommandation */
+    .reco{display:flex;gap:10px;flex-wrap:wrap}
+    .reco-btn{flex:1;min-width:90px;padding:11px 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-weight:600;font-size:.88rem;font-family:inherit;cursor:pointer;transition:.2s}
+    .reco-btn:hover{border-color:var(--accent-2);color:var(--text-primary)}
+    .reco-btn.on{background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(139,92,246,.18));border-color:var(--accent-2);color:#fff}
+    /* consentement */
+    .consent{display:flex;gap:10px;align-items:flex-start;font-size:.84rem;color:var(--text-secondary);cursor:pointer}
+    .consent input{margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:var(--accent-2)}
+    .btn-submit{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--gradient);background-size:200% 200%;color:#fff;font-weight:700;font-size:.98rem;font-family:inherit;cursor:pointer;transition:.25s;margin-top:6px}
+    .btn-submit:hover{background-position:right center;transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.4)}
+    .btn-submit:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none}
+    .foot{text-align:center;font-size:.72rem;color:var(--text-muted);margin-top:18px}
+    .demo-banner{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:var(--amber);font-size:.8rem;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:18px}
+    .err-msg{color:var(--red);font-size:.82rem;margin-top:10px;min-height:1em;text-align:center}
+    /* écran de remerciement */
+    .thanks{text-align:center;padding:20px 6px}
+    .thanks .big{font-size:3rem;margin-bottom:14px}
+    .thanks h1{margin-bottom:10px}
+    .thanks p{color:var(--text-secondary);font-size:.95rem}
+    .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="brand">
+        <div class="brand-logo">ERP <span class="dot">Conseil</span></div>
+        <div class="brand-sub">Espace client</div>
+    </div>
+
+    <!-- ===== Formulaire ===== -->
+    <div class="card" id="formCard">
+        <div class="demo-banner hidden" id="demoBanner">⚠ Mode démonstration : aucune adresse d'envoi configurée, votre avis ne sera pas enregistré.</div>
+
+        <h1>Votre avis compte</h1>
+        <p class="lead">Merci d'avoir fait confiance à ERP Conseil. Quelques secondes pour nous dire comment s'est passée la mission.</p>
+        <div class="mission-chip hidden" id="missionChip"></div>
+
+        <form id="reviewForm" novalidate>
+            <div class="field">
+                <label>Votre note globale <span class="req">*</span></label>
+                <div class="stars" id="starsInput" role="radiogroup" aria-label="Note sur 5">
+                    <span class="star" data-v="1" role="radio" aria-label="1 étoile">★</span>
+                    <span class="star" data-v="2" role="radio" aria-label="2 étoiles">★</span>
+                    <span class="star" data-v="3" role="radio" aria-label="3 étoiles">★</span>
+                    <span class="star" data-v="4" role="radio" aria-label="4 étoiles">★</span>
+                    <span class="star" data-v="5" role="radio" aria-label="5 étoiles">★</span>
+                </div>
+                <div class="stars-hint" id="starsHint">Cliquez sur les étoiles</div>
+            </div>
+
+            <div class="field">
+                <label>Recommanderiez-vous ERP Conseil ?</label>
+                <div class="reco" id="recoInput">
+                    <button type="button" class="reco-btn" data-v="Oui">👍 Oui</button>
+                    <button type="button" class="reco-btn" data-v="Peut-être">🤔 Peut-être</button>
+                    <button type="button" class="reco-btn" data-v="Non">👎 Non</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="commentaire">Votre commentaire (optionnel)</label>
+                <textarea id="commentaire" placeholder="Ce qui vous a plu, ce qu'on pourrait améliorer…"></textarea>
+            </div>
+
+            <div class="field">
+                <label for="email">Votre email (optionnel)</label>
+                <input type="email" id="email" placeholder="vous@exemple.fr" autocomplete="email">
+            </div>
+
+            <div class="field">
+                <label class="consent">
+                    <input type="checkbox" id="publier">
+                    <span>J'autorise ERP Conseil à publier cet avis (nom / société) sur son site et ses supports de communication.</span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">Envoyer mon avis</button>
+            <div class="err-msg" id="errMsg"></div>
+        </form>
+    </div>
+
+    <!-- ===== Remerciement ===== -->
+    <div class="card thanks hidden" id="thanksCard">
+        <div class="big">🙏</div>
+        <h1>Merci pour votre avis !</h1>
+        <p>Votre retour a bien été transmis à ERP Conseil. Il nous aide à progresser à chaque mission.</p>
+    </div>
+
+    <div class="foot">ERP Conseil · Eric Paysant — Entrepreneur individuel · Condat-sur-Vienne (87)</div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   CONFIGURATION
+   Collez ici l'URL de déploiement de votre Google Apps Script
+   (celle qui se termine par /exec). Tant qu'elle est vide, le
+   formulaire fonctionne en « mode démonstration ».
+   ============================================================ */
+const ENDPOINT = '';
+
+/* ---------- Pré-remplissage via l'URL (?client=...&mission=...) ---------- */
+const params  = new URLSearchParams(location.search);
+const client  = (params.get('client')  || '').trim();
+const mission = (params.get('mission') || '').trim();
+if(mission || client){
+    const chip = document.getElementById('missionChip');
+    chip.textContent = mission ? ('Mission : ' + mission) : ('Client : ' + client);
+    chip.classList.remove('hidden');
+}
+if(!ENDPOINT) document.getElementById('demoBanner').classList.remove('hidden');
+
+/* ---------- Notation par étoiles ---------- */
+let note = 0;
+const HINTS = ['', 'Très insatisfait', 'Insatisfait', 'Correct', 'Satisfait', 'Très satisfait'];
+const starEls = [...document.querySelectorAll('#starsInput .star')];
+function paint(n){ starEls.forEach(s => s.classList.toggle('on', +s.dataset.v <= n)); }
+starEls.forEach(s => {
+    s.addEventListener('mouseenter', () => paint(+s.dataset.v));
+    s.addEventListener('click', () => { note = +s.dataset.v; paint(note);
+        document.getElementById('starsHint').textContent = HINTS[note]; });
+});
+document.getElementById('starsInput').addEventListener('mouseleave', () => paint(note));
+
+/* ---------- Recommandation ---------- */
+let reco = '';
+const recoEls = [...document.querySelectorAll('#recoInput .reco-btn')];
+recoEls.forEach(b => b.addEventListener('click', () => {
+    reco = b.dataset.v;
+    recoEls.forEach(x => x.classList.toggle('on', x === b));
+}));
+
+/* ---------- Envoi ---------- */
+const form = document.getElementById('reviewForm');
+const errMsg = document.getElementById('errMsg');
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    errMsg.textContent = '';
+    if(!note){ errMsg.textContent = 'Merci d’attribuer une note (étoiles).'; return; }
+
+    const payload = {
+        client:        client,
+        mission:       mission,
+        note:          note,
+        recommandation: reco,
+        commentaire:   document.getElementById('commentaire').value.trim(),
+        email:         document.getElementById('email').value.trim(),
+        publier:       document.getElementById('publier').checked
+    };
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'Envoi…';
+
+    // Mode démo : pas d'endpoint → on simule l'envoi
+    if(!ENDPOINT){ setTimeout(showThanks, 600); return; }
+
+    // Envoi réel : POST no-cors (réponse non lisible, c'est normal)
+    fetch(ENDPOINT, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // évite le preflight CORS
+        body: JSON.stringify(payload)
+    })
+    .then(showThanks)
+    .catch(() => {
+        btn.disabled = false; btn.textContent = 'Envoyer mon avis';
+        errMsg.textContent = 'Une erreur est survenue. Réessayez dans un instant.';
+    });
+});
+
+function showThanks(){
+    document.getElementById('formCard').classList.add('hidden');
+    document.getElementById('thanksCard').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+})();
+</script>
+</body>
+</html>
