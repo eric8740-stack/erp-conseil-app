@@ -260,6 +260,7 @@ function openDocModal(){
 
     // clients
     fillClientSelect($('#doc-client'), editing.clientId);
+    updateSendDocBtn();
 
     renderLines();
     $('#deleteDoc').hidden  = !editing.id;
@@ -372,6 +373,48 @@ function convertToFacture(){
     save(); closeModal('#docModal');
     toast('Facture '+number+' créée', 'ok');
     openDoc(fac.id);
+}
+
+/* ============================================================
+   ENVOI DU DOCUMENT AU CLIENT (mailto, sans backend)
+   ============================================================ */
+function updateSendDocBtn(){
+    const btn = $('#sendDocEmail'); if(!btn) return;
+    const c = clientById($('#doc-client').value);
+    const has = !!(c && (c.email||'').trim());
+    btn.disabled = !has;
+    btn.title = has ? '' : "Ajoutez un email au client pour activer l'envoi";
+}
+function sendDocEmail(){
+    collectDoc();
+    const c = clientById(editing.clientId) || {};
+    const email = (c.email||'').trim();
+    if(!email){ toast("Ajoutez un email au client pour activer l'envoi.", 'err'); return; }
+
+    const s = DB.settings;
+    const isFac = editing.type==='facture';
+    const montant = (docTotal(editing)).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const greet = c.contact || c.name || 'Madame, Monsieur';
+
+    const lines = [
+        'Bonjour ' + greet + ',',
+        '',
+        'Veuillez trouver ci-joint ' + (isFac?'la facture':'le devis') + ' ' + editing.number +
+            " d'un montant de " + montant + ' € (net à payer).'
+    ];
+    if(isFac && editing.dueDate)  lines.push('Échéance de paiement : ' + frDate(editing.dueDate) + '.');
+    if(!isFac && editing.validity) lines.push('Ce devis est valable ' + editing.validity + '.');
+    if(editing.objet)             lines.push('Objet : ' + editing.objet);
+    if(s.iban)                    lines.push('Règlement par virement — IBAN : ' + s.iban + '.');
+    lines.push('', 'Je reste à votre disposition.', '', 'Bien cordialement,', s.owner||'', 'ERP Conseil — ' + (s.phone||''));
+    const body = lines.join('\r\n');   // \r\n → %0D%0A après encodage
+
+    const subject = (isFac?'Facture ':'Devis ') + editing.number + ' — ERP Conseil';
+    window.location.href = 'mailto:' + email
+        + '?subject=' + encodeURIComponent(subject)
+        + '&body='    + encodeURIComponent(body);
+
+    toast('Pensez à joindre le PDF : bouton « Aperçu / PDF » → Enregistrer au format PDF, puis glissez-le dans l\'email.', 'ok');
 }
 
 /* ============================================================
@@ -1028,6 +1071,7 @@ function saveClient(){
     if(editingClient._returnToDoc){            // revenu depuis l'éditeur de doc
         editing.clientId = id;
         fillClientSelect($('#doc-client'), id);
+        updateSendDocBtn();
     } else { renderClients(); }
 }
 function deleteClient(){
@@ -1158,9 +1202,10 @@ function init(){
     $('#saveDoc').onclick   = saveDoc;
     $('#deleteDoc').onclick = deleteDoc;
     $('#printDoc').onclick  = printDoc;
+    $('#sendDocEmail').onclick = sendDocEmail;
     $('#convertDoc').onclick= convertToFacture;
     $('#reviewLinkDoc').onclick = ()=> openReviewModal(editing.clientId, editing.number||'');
-    $('#doc-client').onchange = e=>{ if(e.target.value==='__new'){ newClient(true);} else { editing.clientId=e.target.value; } };
+    $('#doc-client').onchange = e=>{ if(e.target.value==='__new'){ newClient(true);} else { editing.clientId=e.target.value; } updateSendDocBtn(); };
     $('#doc-status').onchange = updatePaidVisibility;
 
     // éditeur client
