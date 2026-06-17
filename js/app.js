@@ -40,7 +40,9 @@ const DEFAULTS = {
         formurl:'',       // URL publique de satisfaction.html (lien d'avis envoyé aux clients)
         satendpoint:'',   // URL Apps Script …/exec pour lire les avis ET les demandes (Airtable)
         demandeFormUrl:'',// URL publique de demande.html (formulaire de demande d'intervention)
-        appKey:''         // clé de lecture (sécurité) — doit correspondre à READ_KEY côté Apps Script
+        appKey:'',        // clé de lecture (sécurité) — doit correspondre à READ_KEY côté Apps Script
+        urssafPeriod:'Trimestrielle', // périodicité de déclaration URSSAF (Mensuelle / Trimestrielle)
+        urssafRate:''     // taux de cotisations (%) optionnel, pour l'estimation
     },
     clients:[
         {id:'cl_demo', name:'A3D Design', address:'', siret:'', contact:'', email:'', phone:''}
@@ -103,6 +105,7 @@ function renderView(name){
     if(name==='devis')     renderDocList('devis');
     if(name==='factures')  renderDocList('facture');
     if(name==='bilan')     renderBilan();
+    if(name==='urssaf')    renderUrssaf();
     if(name==='demandes')  renderDemandes();
     if(name==='satisfaction') renderSatisfaction();
     if(name==='clients')   renderClients();
@@ -128,6 +131,7 @@ function renderDashboard(){
         ${kpi('Devis en attente', sent.length, `Valeur ${euro(sent.reduce((s,d)=>s+docTotal(d),0))}`)}
         ${kpi("Taux d'acceptation", txAccept+' %', `${accepted.length}/${devis.length} accepté(s)`)}
     `;
+    renderUrssafReminder();
     renderRelances(factures);
     $('#recentDevis').innerHTML    = miniList(devis);
     $('#recentFactures').innerHTML = miniList(factures);
@@ -801,19 +805,160 @@ function demHelp(){
 function bindDemHelp(){ const b=$('#demGoSettings'); if(b) b.onclick=()=>showView('settings'); }
 
 /* ---------- Copie presse-papier générique ---------- */
-function copyToClipboard(text){
+function copyToClipboard(text, okMsg){
+    okMsg = okMsg || 'Lien copié';
     if(!text){ toast('Rien à copier.', 'err'); return; }
     if(navigator.clipboard && window.isSecureContext){
-        navigator.clipboard.writeText(text).then(()=>toast('Lien copié', 'ok'), ()=>execCopy(text));
-    } else execCopy(text);
+        navigator.clipboard.writeText(text).then(()=>toast(okMsg, 'ok'), ()=>execCopy(text, okMsg));
+    } else execCopy(text, okMsg);
 }
-function execCopy(text){
+function execCopy(text, okMsg){
+    okMsg = okMsg || 'Lien copié';
     const ta=document.createElement('textarea');
     ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
     document.body.appendChild(ta); ta.focus(); ta.select();
-    try{ document.execCommand('copy'); toast('Lien copié', 'ok'); }
+    try{ document.execCommand('copy'); toast(okMsg, 'ok'); }
     catch(e){ toast('Copie impossible.', 'err'); }
     document.body.removeChild(ta);
+}
+
+/* ============================================================
+   URSSAF — CA encaissé à déclarer (micro-entrepreneur)
+   ============================================================ */
+let urssafState = null;
+function urssafInit(){
+    if(urssafState) return;
+    const now = new Date();
+    urssafState = {
+        mode: (DB.settings.urssafPeriod==='Trimestrielle') ? 'trimestrielle' : 'mensuelle',
+        year: now.getFullYear(),
+        month: now.getMonth()+1,
+        quarter: Math.floor(now.getMonth()/3)+1
+    };
+}
+function urssafYears(){
+    const ys = new Set(DB.documents.filter(d=>d.type==='facture'&&d.status==='payee'&&d.paidDate).map(d=>+d.paidDate.slice(0,4)));
+    ys.add(new Date().getFullYear());
+    return [...ys].sort((a,b)=>b-a);
+}
+function urssafRange(){
+    const y = urssafState.year;
+    if(urssafState.mode==='trimestrielle'){
+        const q = urssafState.quarter, m1=(q-1)*3+1, m3=m1+2;
+        const last = new Date(y, m3, 0).getDate();
+        return { start:`${y}-${String(m1).padStart(2,'0')}-01`,
+                 end:`${y}-${String(m3).padStart(2,'0')}-${String(last).padStart(2,'0')}`,
+                 label:`T${q} ${y} (${MONTHS[m1-1]}–${MONTHS[m3-1]})` };
+    }
+    const m = urssafState.month, mm = String(m).padStart(2,'0');
+    const last = new Date(y, m, 0).getDate();
+    return { start:`${y}-${mm}-01`, end:`${y}-${mm}-${String(last).padStart(2,'0')}`, label:`${MONTHS[m-1]} ${y}` };
+}
+function renderUrssaf(){
+    urssafInit();
+    const years = urssafYears();
+    if(!years.includes(urssafState.year)) urssafState.year = years[0];
+
+    const { start, end, label } = urssafRange();
+    const paid = DB.documents.filter(d=> d.type==='facture' && d.status==='payee' && d.paidDate && d.paidDate>=start && d.paidDate<=end);
+    const ca   = paid.reduce((s,f)=> s+docTotal(f), 0);
+    const rate = parseFloat(String(DB.settings.urssafRate||'').replace(',','.'));
+    const hasRate = !isNaN(rate) && rate>0;
+
+    const monthOrQuarter = urssafState.mode==='trimestrielle'
+        ? `<label>Trimestre<select id="u-quarter">${[1,2,3,4].map(q=>`<option value="${q}"${urssafState.quarter===q?' selected':''}>T${q}</option>`).join('')}</select></label>`
+        : `<label>Mois<select id="u-month">${MONTHS.map((m,i)=>`<option value="${i+1}"${urssafState.month===i+1?' selected':''}>${m}</option>`).join('')}</select></label>`;
+
+    $('#urssafBody').innerHTML = `
+        <div class="card">
+            <div class="urssaf-controls">
+                <label>Périodicité<select id="u-mode">
+                    <option value="mensuelle"${urssafState.mode==='mensuelle'?' selected':''}>Mensuelle</option>
+                    <option value="trimestrielle"${urssafState.mode==='trimestrielle'?' selected':''}>Trimestrielle</option>
+                </select></label>
+                ${monthOrQuarter}
+                <label>Année<select id="u-year">${years.map(y=>`<option value="${y}"${urssafState.year===y?' selected':''}>${y}</option>`).join('')}</select></label>
+            </div>
+        </div>
+
+        <div class="card urssaf-main">
+            <div class="u-calabel">CA encaissé — ${esc(label)}</div>
+            <div class="urssaf-amount">${euro(ca)}</div>
+            <div class="u-casub">${paid.length} facture(s) encaissée(s) sur la période · montant à reporter sur autoentrepreneur.urssaf.fr</div>
+            ${hasRate ? `<div class="urssaf-estim"><span class="ue-label">Estimation des cotisations (${esc(String(DB.settings.urssafRate).trim())} %)</span><span class="ue-val">≈ ${euro(ca*rate/100)}</span><span class="ue-note">estimation indicative, non contractuelle</span></div>` : ''}
+            <div class="urssaf-actions">
+                <button class="btn btn-primary" id="u-copy">⧉ Copier le montant</button>
+                <button class="btn btn-outline" id="u-export">⭳ Exporter le livre des recettes (CSV)</button>
+            </div>
+        </div>
+
+        <p class="muted small">💡 Déclarez ce CA encaissé sur <code>autoentrepreneur.urssaf.fr</code> (même à 0 €).</p>`;
+
+    $('#u-mode').onchange = e=>{ urssafState.mode=e.target.value; renderUrssaf(); };
+    const my = $('#u-month');   if(my) my.onchange = e=>{ urssafState.month=+e.target.value; renderUrssaf(); };
+    const tq = $('#u-quarter'); if(tq) tq.onchange = e=>{ urssafState.quarter=+e.target.value; renderUrssaf(); };
+    $('#u-year').onchange = e=>{ urssafState.year=+e.target.value; renderUrssaf(); };
+    $('#u-copy').onclick  = ()=> copyToClipboard(String(Math.round(ca)), 'Montant copié : ' + Math.round(ca) + ' € (arrondi à l\'euro)');
+    $('#u-export').onclick = exportUrssafCsv;
+}
+/* Livre des recettes : toutes les factures payées, triées par date d'encaissement */
+function exportUrssafCsv(){
+    const paid = DB.documents.filter(d=> d.type==='facture' && d.status==='payee' && d.paidDate)
+        .sort((a,b)=> (a.paidDate||'').localeCompare(b.paidDate||''));
+    if(!paid.length){ toast('Aucune facture encaissée à exporter.', 'err'); return; }
+    const rows = [["Date d'encaissement",'N° facture','Client','Montant encaissé','Mode de règlement']];
+    paid.forEach(f=>{ const c=clientById(f.clientId);
+        rows.push([frDate(f.paidDate), f.number, c?c.name:'', docTotal(f).toFixed(2), 'Virement']);
+    });
+    const csv = '﻿' + rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = `erp-conseil-livre-recettes-${todayISO()}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    toast('Livre des recettes exporté', 'ok');
+}
+/* Prochaine échéance de déclaration + CA de la période close concernée */
+function urssafNextDue(){
+    const mensuel = (DB.settings.urssafPeriod==='Mensuelle');
+    const now = new Date(), today = todayISO();
+    const pad = n => String(n).padStart(2,'0');
+    let start, end, periodLabel, deadline;
+
+    if(mensuel){
+        // période close = mois précédent ; échéance = fin du mois courant
+        let y = now.getFullYear(), mi = now.getMonth()-1;
+        if(mi<0){ mi=11; y--; }
+        const m = mi+1, last = new Date(y, m, 0).getDate();
+        start=`${y}-${pad(m)}-01`; end=`${y}-${pad(m)}-${pad(last)}`; periodLabel=`${MONTHS[mi]} ${y}`;
+        const dy=now.getFullYear(), dm=now.getMonth()+1, dlast=new Date(dy, dm, 0).getDate();
+        deadline=`${dy}-${pad(dm)}-${pad(dlast)}`;
+    } else {
+        const Y = now.getFullYear();
+        const cands = [
+            { dl:`${Y}-01-31`,   q:4, y:Y-1 },   // T4 année préc.
+            { dl:`${Y}-04-30`,   q:1, y:Y },
+            { dl:`${Y}-07-31`,   q:2, y:Y },
+            { dl:`${Y}-10-31`,   q:3, y:Y },
+            { dl:`${Y+1}-01-31`, q:4, y:Y }
+        ];
+        const next = cands.find(c=> c.dl >= today) || cands[cands.length-1];
+        const m1=(next.q-1)*3+1, m3=m1+2, last=new Date(next.y, m3, 0).getDate();
+        start=`${next.y}-${pad(m1)}-01`; end=`${next.y}-${pad(m3)}-${pad(last)}`;
+        periodLabel=`T${next.q} ${next.y}`; deadline=next.dl;
+    }
+    const ca = DB.documents.filter(d=> d.type==='facture' && d.status==='payee' && d.paidDate && d.paidDate>=start && d.paidDate<=end)
+                           .reduce((s,f)=> s+docTotal(f), 0);
+    const daysUntil = Math.ceil((new Date(deadline) - new Date(today)) / 86400000);
+    return { deadline, periodLabel, ca, daysUntil };
+}
+function renderUrssafReminder(){
+    const box = $('#urssafReminder'); if(!box) return;
+    const d = urssafNextDue();
+    const urgent = d.daysUntil < 10;
+    box.innerHTML = `<div class="urssaf-reminder${urgent?' urgent':''}">
+        <div class="ur-head">🧾 Prochaine déclaration URSSAF : <strong>${frDate(d.deadline)}</strong>${urgent?` <span class="ur-badge">dans ${Math.max(0,d.daysUntil)} j</span>`:''}</div>
+        <div class="ur-body">CA encaissé à déclarer (${esc(d.periodLabel)}) : <strong>${euro(d.ca)}</strong></div>
+        <a class="ur-link link" href="https://www.autoentrepreneur.urssaf.fr" target="_blank" rel="noopener">Déclarer sur autoentrepreneur.urssaf.fr →</a>
+    </div>`;
 }
 
 /* ============================================================
@@ -1097,6 +1242,7 @@ function fillSettings(){
     $('#set-formurl').value=s.formurl||''; $('#set-satendpoint').value=s.satendpoint||'';
     $('#set-demformurl').value=s.demandeFormUrl||'';
     $('#set-appkey').value=s.appKey||'';
+    $('#set-urssafperiod').value=s.urssafPeriod||'Mensuelle'; $('#set-urssafrate').value=s.urssafRate||'';
     renderLogoPreview(); updateNumPreview();
 }
 function renderLogoPreview(){
@@ -1131,6 +1277,8 @@ function saveSettings(){
     s.formurl=$('#set-formurl').value.trim(); s.satendpoint=$('#set-satendpoint').value.trim();
     s.demandeFormUrl=$('#set-demformurl').value.trim();
     s.appKey=$('#set-appkey').value.trim();
+    s.urssafPeriod=$('#set-urssafperiod').value; s.urssafRate=$('#set-urssafrate').value.trim();
+    urssafState=null;               // la périodicité a pu changer : on réinitialise la vue URSSAF
     satCache=null; demCache=null;   // endpoint/clé ont pu changer : on rechargera avis & demandes
     save(); refreshBrand(); toast('Réglages enregistrés', 'ok');
 }

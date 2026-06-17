@@ -203,6 +203,24 @@ th.amount{text-align:right}
 #bilanTable tbody tr{cursor:default}
 #bilanTable tfoot td{padding:14px 18px;font-weight:800;border-top:2px solid var(--border)}
 
+/* ===================== URSSAF ===================== */
+.urssaf-controls{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.urssaf-controls label{min-width:150px}
+.urssaf-main .u-calabel{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);font-weight:600}
+.urssaf-amount{font-size:2.6rem;font-weight:800;letter-spacing:-.02em;margin:6px 0;background:var(--gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.u-casub{font-size:.82rem;color:var(--text-muted)}
+.urssaf-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.urssaf-estim{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.urssaf-estim .ue-label{color:var(--text-secondary);font-weight:600}
+.urssaf-estim .ue-val{font-size:1.25rem;font-weight:800;color:var(--amber)}
+.urssaf-estim .ue-note{font-size:.78rem;color:var(--text-muted);font-style:italic}
+.urssaf-reminder{background:linear-gradient(135deg,rgba(99,102,241,.10),rgba(6,182,212,.06));border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px}
+.urssaf-reminder.urgent{background:linear-gradient(135deg,rgba(245,158,11,.13),rgba(239,68,68,.07));border-color:#4a3a2a}
+.urssaf-reminder .ur-head{font-weight:700;font-size:1rem}
+.urssaf-reminder .ur-badge{display:inline-block;background:rgba(245,158,11,.2);color:var(--amber);font-size:.74rem;font-weight:700;padding:3px 10px;border-radius:30px;margin-left:6px;vertical-align:middle}
+.urssaf-reminder .ur-body{color:var(--text-secondary);font-size:.92rem;margin-top:6px}
+.urssaf-reminder .ur-link{display:inline-block;margin-top:10px;font-weight:600}
+
 /* ===================== PRINT (Devis / Facture PDF) ===================== */
 #printArea{display:none}
 @media print{

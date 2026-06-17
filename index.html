@@ -23,6 +23,7 @@
         <button class="nav-item" data-view="factures"><span class="ico">🧾</span> Factures</button>
         <button class="nav-item" data-view="demandes"><span class="ico">📨</span> Demandes</button>
         <button class="nav-item" data-view="bilan"><span class="ico">📊</span> Bilan</button>
+        <button class="nav-item" data-view="urssaf"><span class="ico">🧾</span> URSSAF</button>
         <button class="nav-item" data-view="satisfaction"><span class="ico">⭐</span> Satisfaction</button>
         <button class="nav-item" data-view="clients"><span class="ico">👥</span> Clients</button>
         <button class="nav-item" data-view="settings"><span class="ico">⚙</span> Réglages</button>
@@ -51,6 +52,8 @@
         </header>
 
         <div class="kpi-grid" id="kpiGrid"></div>
+
+        <div id="urssafReminder"></div>
 
         <div id="relancesCard"></div>
 
@@ -118,6 +121,14 @@
             <div class="card-head"><h2>Détail par mois</h2></div>
             <div class="table-wrap"><table class="data-table" id="bilanTable"></table></div>
         </div>
+    </section>
+
+    <!-- ===== URSSAF ===== -->
+    <section class="view" id="view-urssaf">
+        <header class="view-head">
+            <div><h1>URSSAF</h1><p class="muted">CA encaissé à déclarer (micro-entrepreneur)</p></div>
+        </header>
+        <div id="urssafBody"></div>
     </section>
 
     <!-- ===== SATISFACTION ===== -->
@@ -206,6 +217,20 @@
                 <label class="full">Lien public du formulaire de demande (page <code>demande.html</code>)<input id="set-demformurl" type="text" placeholder="https://eric8740-stack.github.io/erp-conseil-app/demande.html"></label>
             </div>
             <p class="muted small">Les demandes utilisent le même endpoint que la satisfaction (réglage ci-dessus). La table « Demandes » doit être créée via la fonction <code>setupDemandes</code> dans Apps Script.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h2>Déclaration URSSAF</h2></div>
+            <div class="form-grid">
+                <label>Périodicité de déclaration
+                    <select id="set-urssafperiod">
+                        <option value="Mensuelle">Mensuelle</option>
+                        <option value="Trimestrielle">Trimestrielle</option>
+                    </select>
+                </label>
+                <label>Taux de cotisations (%)<input id="set-urssafrate" type="text" placeholder="ex. 21,2 — optionnel"></label>
+            </div>
+            <p class="muted small">Le taux ne sert qu'à une <b>estimation</b> indicative des cotisations. Le montant à déclarer reste le <b>CA encaissé</b>.</p>
         </div>
 
         <div class="settings-actions">
