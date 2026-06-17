@@ -102,7 +102,8 @@
                     <label class="chip"><input type="checkbox" value="Automatisation Excel / VBA"><span>Automatisation Excel / VBA</span></label>
                     <label class="chip"><input type="checkbox" value="Correction d'un fichier existant"><span>Correction d'un fichier existant</span></label>
                     <label class="chip"><input type="checkbox" value="Extraction / analyse de données (SQL)"><span>Extraction / analyse de données (SQL)</span></label>
-                    <label class="chip"><input type="checkbox" value="Formation"><span>Formation</span></label>
+                    <label class="chip"><input type="checkbox" value="Création de site web" data-v="Création de site web"><span>🌐 Création de site web</span></label>
+                    <label class="chip"><input type="checkbox" value="Base de données / appli connectée" data-v="Base de données / appli connectée"><span>🗄️ Base de données / appli connectée</span></label>
                     <label class="chip"><input type="checkbox" value="Je ne sais pas trop"><span>Je ne sais pas trop</span></label>
                 </div>
             </div>
@@ -133,8 +134,6 @@
                     <button type="button" class="pick-btn" data-v="Pas pressé">🌿 Pas pressé</button>
                 </div>
             </div>
-            <div class="field"><label for="budget">Budget indicatif (facultatif)</label><input type="text" id="budget" placeholder="Ex. : autour de 500 €, à voir ensemble…"></div>
-
             <button type="submit" class="btn-submit" id="submitBtn">Envoyer ma demande</button>
             <div class="err-msg" id="errMsg"></div>
         </form>
@@ -214,7 +213,6 @@ form.addEventListener('submit', (e) => {
         adresse:     mode === 'Sur site' ? document.getElementById('adresse').value.trim() : '',
         contactsite: mode === 'Sur site' ? document.getElementById('contactsite').value.trim() : '',
         delai:       delai,
-        budget:      document.getElementById('budget').value.trim(),
         date:        new Date().toISOString().slice(0, 10)
     };
 
