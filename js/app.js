@@ -59,8 +59,7 @@ function load(){
     DB.settings = Object.assign({}, DEFAULTS.settings, DB.settings || {});
     // migration 07/2026 : mentions légales conformes (régime libéral ≠ dispense
     // RCS/RM ; assurance RC Pro obligatoire sur les factures depuis souscription)
-    const OLD_LEGAL = "Eric Paysant — Entrepreneur individuel · Condat-sur-Vienne (87) · Dispensé d'immatriculation au RCS et au RM";
-    if(DB.settings.legal === OLD_LEGAL) DB.settings.legal = DEFAULTS.settings.legal;
+    if(/Dispensé d.immatriculation/i.test(DB.settings.legal || '')) DB.settings.legal = DEFAULTS.settings.legal;
     DB.settings.counters = DB.settings.counters || {};
     DB.clients   = DB.clients   || [];
     DB.documents = DB.documents || [];
