@@ -32,7 +32,7 @@ const DEFAULTS = {
         paydays:30,       // délai de paiement par défaut (jours)
         tva:'TVA non applicable, art. 293 B du CGI',
         payterms:'Paiement à 30 jours à réception de facture, par virement bancaire.',
-        legal:"Eric Paysant — Entrepreneur individuel · Condat-sur-Vienne (87) · Dispensé d'immatriculation au RCS et au RM",
+        legal:"Eric Paysant — Entrepreneur individuel · ERP Conseil\nSIREN 106 416 829 · Condat-sur-Vienne (87) · Activité libérale (BNC)\nAssurance RC Pro : Hiscox (via Orus) · Garantie monde entier hors USA/Canada",
         validity:'1 mois',
         devprefix:'DEV',
         facprefix:'FAC',
@@ -57,6 +57,10 @@ function load(){
     catch(e){ DB = structuredClone(DEFAULTS); }
     // fusion défensive des réglages
     DB.settings = Object.assign({}, DEFAULTS.settings, DB.settings || {});
+    // migration 07/2026 : mentions légales conformes (régime libéral ≠ dispense
+    // RCS/RM ; assurance RC Pro obligatoire sur les factures depuis souscription)
+    const OLD_LEGAL = "Eric Paysant — Entrepreneur individuel · Condat-sur-Vienne (87) · Dispensé d'immatriculation au RCS et au RM";
+    if(DB.settings.legal === OLD_LEGAL) DB.settings.legal = DEFAULTS.settings.legal;
     DB.settings.counters = DB.settings.counters || {};
     DB.clients   = DB.clients   || [];
     DB.documents = DB.documents || [];
@@ -252,6 +256,8 @@ function openDocModal(){
     $('#doc-echeance').value = editing.dueDate || '';
     $('#doc-paid').value     = editing.paidDate || '';
     $('#doc-echeance-wrap').style.display = isFac ? '' : 'none';
+    $('#doc-prestation').value = editing.serviceDate || '';
+    $('#doc-prestation-wrap').style.display = isFac ? '' : 'none';
     $('#doc-objet').value    = editing.objet || '';
     $('#doc-notes').value    = editing.notes || '';
     $('#doc-tvanote').textContent = DB.settings.tva;
@@ -327,6 +333,7 @@ function collectDoc(){
     if(editing.type==='facture'){
         editing.dueDate  = $('#doc-echeance').value;
         editing.paidDate = $('#doc-status').value==='payee' ? ($('#doc-paid').value||todayISO()) : '';
+        editing.serviceDate = $('#doc-prestation').value;
     }
 }
 function saveDoc(){
@@ -452,6 +459,7 @@ function printDoc(){
                 <p class="dm-num">N° ${esc(editing.number)}</p>
                 <p>Date : ${frDate(editing.date)}</p>
                 ${!isFac && editing.validity ? `<p>Validité : ${esc(editing.validity)}</p>`:''}
+                ${isFac ? `<p>Prestation : ${frDate(editing.serviceDate || editing.date)}</p>`:''}
                 ${isFac && editing.dueDate ? `<p>Échéance : ${frDate(editing.dueDate)}</p>`:''}
                 ${isFac && editing.sourceDevis ? `<p>Réf. devis : ${esc(editing.sourceDevis)}</p>`:''}
             </div>
@@ -496,7 +504,7 @@ function printDoc(){
         <div class="doc-conditions">
             <h4>Conditions de règlement</h4>
             <p>${esc(s.payterms)}</p>
-            <p>Pénalités de retard : 3 × taux d'intérêt légal. Indemnité forfaitaire de recouvrement : 40 €.</p>
+            <p>Pénalités de retard : 3 fois le taux d'intérêt légal en vigueur. Indemnité forfaitaire pour frais de recouvrement : 40 € (art. L441-10 et D441-5 C. com.).</p>
             ${s.iban?`<p>IBAN : ${esc(s.iban)}</p>`:''}
         </div>
 
@@ -508,7 +516,7 @@ function printDoc(){
             </div>
         </div>`:''}
 
-        <div class="doc-foot">${esc(s.legal)}</div>
+        <div class="doc-foot">${esc(s.legal).replace(/\n/g,'<br>')}</div>
     </div>`;
 
     setTimeout(()=> window.print(), 60);
