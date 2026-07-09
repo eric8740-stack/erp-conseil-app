@@ -2,7 +2,7 @@
 :root{
     --bg-primary:#0a0a0f; --bg-secondary:#12121a; --bg-card:#1a1a25; --bg-card-hover:#22222f;
     --text-primary:#f0f0f5; --text-secondary:#9595a8; --text-muted:#6b6b80;
-    --accent-1:#6366f1; --accent-2:#8b5cf6; --accent-3:#06b6d4;
+    --accent-1:#0B7A6F; --accent-2:#0D9488; --accent-3:#2CD4C0;
     --gradient:linear-gradient(135deg,var(--accent-1),var(--accent-2),var(--accent-3));
     --border:#2a2a3a; --radius:14px; --radius-sm:9px;
     --shadow:0 8px 30px rgba(0,0,0,.35);
@@ -31,8 +31,7 @@ a,.link{color:var(--accent-2);text-decoration:none;background:none;border:none;f
     display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;height:100vh;z-index:50;
 }
 .brand{padding:0 8px 24px}
-.brand-logo{font-size:1.35rem;font-weight:800;display:block}
-.brand-logo .dot{background:var(--gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand-mark{width:100%;max-width:196px;height:auto;display:block;margin-bottom:10px}
 .brand-sub{font-size:.72rem;text-transform:uppercase;letter-spacing:.18em;color:var(--text-muted);font-weight:600}
 .side-nav{display:flex;flex-direction:column;gap:4px;flex:1}
 .nav-item{
@@ -40,7 +39,7 @@ a,.link{color:var(--accent-2);text-decoration:none;background:none;border:none;f
     border-radius:var(--radius-sm);font-size:.92rem;font-weight:500;text-align:left;transition:var(--transition);
 }
 .nav-item:hover{background:var(--bg-card);color:var(--text-primary)}
-.nav-item.active{background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(139,92,246,.12));color:var(--text-primary);box-shadow:inset 3px 0 0 var(--accent-2)}
+.nav-item.active{background:linear-gradient(135deg,rgba(13,148,136,.18),rgba(13,148,136,.12));color:var(--text-primary);box-shadow:inset 3px 0 0 var(--accent-2)}
 .nav-item .ico{font-size:1.05rem;width:20px;text-align:center}
 .side-foot{padding:14px 10px 0;border-top:1px solid var(--border);font-size:.82rem}
 .side-foot p{font-weight:600}.side-foot .muted{font-weight:400;font-size:.76rem}
@@ -57,7 +56,7 @@ a,.link{color:var(--accent-2);text-decoration:none;background:none;border:none;f
 .btn{padding:10px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:.88rem;border:1px solid transparent;transition:var(--transition);white-space:nowrap}
 .btn-sm{padding:7px 13px;font-size:.82rem}
 .btn-primary{background:var(--gradient);color:#fff;background-size:200% 200%}
-.btn-primary:hover{background-position:right center;transform:translateY(-1px);box-shadow:0 6px 18px rgba(99,102,241,.4)}
+.btn-primary:hover{background-position:right center;transform:translateY(-1px);box-shadow:0 6px 18px rgba(13,148,136,.4)}
 .btn-secondary{background:var(--bg-card);color:var(--text-primary);border-color:var(--border)}
 .btn-secondary:hover{background:var(--bg-card-hover)}
 .btn-outline{background:transparent;color:var(--text-primary);border-color:var(--border)}
@@ -72,7 +71,7 @@ input,select,textarea{
     width:100%;padding:10px 12px;background:var(--bg-primary);border:1px solid var(--border);
     border-radius:var(--radius-sm);color:var(--text-primary);font-size:.9rem;font-family:inherit;transition:var(--transition);
 }
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(13,148,136,.15)}
 textarea{resize:vertical}
 .search{width:220px;background:var(--bg-card)}
 label{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:600;color:var(--text-secondary)}
@@ -116,7 +115,7 @@ th.amount{text-align:right}
 .badge.accepte{background:rgba(16,185,129,.15);color:#34d399}
 .badge.refuse{background:rgba(239,68,68,.15);color:#f87171}
 .badge.payee{background:rgba(16,185,129,.2);color:#34d399}
-.badge.facture{background:rgba(139,92,246,.18);color:#a78bfa}
+.badge.facture{background:rgba(13,148,136,.18);color:#5eead4}
 
 /* ---------- Clients grid ---------- */
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
@@ -214,7 +213,7 @@ th.amount{text-align:right}
 .urssaf-estim .ue-label{color:var(--text-secondary);font-weight:600}
 .urssaf-estim .ue-val{font-size:1.25rem;font-weight:800;color:var(--amber)}
 .urssaf-estim .ue-note{font-size:.78rem;color:var(--text-muted);font-style:italic}
-.urssaf-reminder{background:linear-gradient(135deg,rgba(99,102,241,.10),rgba(6,182,212,.06));border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px}
+.urssaf-reminder{background:linear-gradient(135deg,rgba(13,148,136,.10),rgba(44,212,192,.06));border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px}
 .urssaf-reminder.urgent{background:linear-gradient(135deg,rgba(245,158,11,.13),rgba(239,68,68,.07));border-color:#4a3a2a}
 .urssaf-reminder .ur-head{font-weight:700;font-size:1rem}
 .urssaf-reminder .ur-badge{display:inline-block;background:rgba(245,158,11,.2);color:var(--amber);font-size:.74rem;font-weight:700;padding:3px 10px;border-radius:30px;margin-left:6px;vertical-align:middle}
@@ -238,25 +237,25 @@ th.amount{text-align:right}
 .doc-sheet *{box-sizing:border-box}
 
 /* En-tête : logo / titre à gauche, méta à droite */
-.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:14px;border-bottom:2px solid #6366f1;margin-bottom:18px}
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:14px;border-bottom:2px solid #0B7A6F;margin-bottom:18px}
 .doc-logo{max-height:58px;max-width:230px;object-fit:contain;display:block}
 .dc-name{font-size:24px;font-weight:800;color:#1a1a25;letter-spacing:-.01em}
-.dc-name .dot{background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.dc-name .dot{background:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .doc-meta{text-align:right;flex-shrink:0}
-.doc-meta .dm-type{font-size:24px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.doc-meta .dm-type{font-size:24px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .doc-meta p{font-size:11px;color:#555;margin-top:3px}
 .doc-meta .dm-num{font-family:'JetBrains Mono',monospace;font-weight:600;color:#222;font-size:12px}
 
 /* Émetteur / Client en deux colonnes, alignés en haut */
 .doc-parties{display:flex;gap:18px;margin-bottom:16px;align-items:stretch}
 .doc-party{flex:1;border:1px solid #e5e5e5;border-radius:8px;padding:12px 14px}
-.doc-party-client{background:#faf9ff;border-color:#e7e2fb}
-.dp-title{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#8b5cf6;font-weight:700;margin-bottom:6px}
+.doc-party-client{background:#f1fbf9;border-color:#cdeee8}
+.dp-title{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#0D9488;font-weight:700;margin-bottom:6px}
 .doc-party p{font-size:11px;color:#555;margin-top:2px}
 .doc-party .dp-strong{font-size:12.5px;font-weight:700;color:#222}
 
 /* Objet */
-.doc-objet{font-size:12px;color:#222;margin-bottom:14px;padding:9px 12px;background:#f7f7fa;border-left:3px solid #8b5cf6;border-radius:4px}
+.doc-objet{font-size:12px;color:#222;margin-bottom:14px;padding:9px 12px;background:#f7f7fa;border-left:3px solid #0D9488;border-radius:4px}
 .doc-objet .do-label{font-weight:700}
 
 /* Tableau des lignes — largeurs fixes, montants insécables */
@@ -279,8 +278,8 @@ table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 .doc-totals td{padding:6px 14px;font-size:12px}
 .doc-totals .tt-label{color:#555}
 .doc-totals .tt-val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.doc-totals .tt-net td{background:#f4f2fd;border-top:1px solid #e7e2fb;border-bottom:1px solid #e7e2fb;font-size:14px;font-weight:800;padding-top:9px;padding-bottom:9px}
-.doc-totals .tt-net .tt-val{background:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.doc-totals .tt-net td{background:#eefaf7;border-top:1px solid #cdeee8;border-bottom:1px solid #cdeee8;font-size:14px;font-weight:800;padding-top:9px;padding-bottom:9px}
+.doc-totals .tt-net .tt-val{background:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .doc-tva{font-size:10px;color:#777;font-style:italic;text-align:right;margin-top:7px}
 
 /* Conditions de règlement */

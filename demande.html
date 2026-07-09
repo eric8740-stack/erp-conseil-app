@@ -5,27 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Demande d'intervention — ERP Conseil</title>
 <meta name="description" content="Décrivez votre besoin : ERP Conseil vous recontacte rapidement.">
+<link rel="icon" type="image/svg+xml" href="assets/erp-conseil-favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/erp-conseil-favicon-32.png">
+<link rel="apple-touch-icon" href="assets/erp-conseil-favicon-180.png">
+<meta name="theme-color" content="#0A0A0A">
+<meta property="og:title" content="Demande d'intervention — ERP Conseil">
+<meta property="og:description" content="Décrivez votre besoin : ERP Conseil vous recontacte rapidement.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://eric8740-stack.github.io/erp-conseil-app/assets/erp-conseil-logo-dark.png">
 <style>
     /* ===== Formulaire de demande autonome — couleurs ERP Conseil ===== */
     :root{
         --bg-primary:#0a0a0f; --bg-card:#1a1a25; --bg-input:#12121a;
         --text-primary:#f0f0f5; --text-secondary:#9595a8; --text-muted:#6b6b80;
-        --accent-1:#6366f1; --accent-2:#8b5cf6; --accent-3:#06b6d4;
-        --gradient:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);
+        --accent-1:#0B7A6F; --accent-2:#0D9488; --accent-3:#2CD4C0;
+        --gradient:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);
         --border:#2a2a3a; --amber:#f59e0b; --green:#10b981; --red:#ef4444;
         --radius:14px; --radius-sm:9px;
     }
     *{margin:0;padding:0;box-sizing:border-box}
     body{
         font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-        background:radial-gradient(1200px 600px at 50% -10%,rgba(99,102,241,.18),transparent),var(--bg-primary);
+        background:radial-gradient(1200px 600px at 50% -10%,rgba(13,148,136,.18),transparent),var(--bg-primary);
         color:var(--text-primary);min-height:100vh;display:flex;align-items:center;justify-content:center;
         padding:28px 16px;line-height:1.55;
     }
     .wrap{width:100%;max-width:620px}
     .brand{text-align:center;margin-bottom:22px}
-    .brand-logo{font-size:1.6rem;font-weight:800}
-    .brand-logo .dot{background:var(--gradient);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .brand-logo-img{width:100%;max-width:300px;height:auto;margin:0 auto 4px;display:block}
     .brand-sub{font-size:.72rem;text-transform:uppercase;letter-spacing:.18em;color:var(--text-muted);font-weight:600;margin-top:2px}
     .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
     h1{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
@@ -40,7 +47,7 @@
         width:100%;padding:11px 13px;background:var(--bg-input);border:1px solid var(--border);
         border-radius:var(--radius-sm);color:var(--text-primary);font-size:.92rem;font-family:inherit;transition:.2s;
     }
-    input:focus,textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(139,92,246,.15)}
+    input:focus,textarea:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(13,148,136,.15)}
     textarea{resize:vertical;min-height:96px}
     /* chips multi-sélection */
     .chips{display:flex;flex-wrap:wrap;gap:9px}
@@ -48,14 +55,14 @@
     .chip input{position:absolute;opacity:0;pointer-events:none}
     .chip span{display:inline-block;padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:30px;font-size:.86rem;color:var(--text-secondary);font-weight:600;transition:.2s}
     .chip:hover span{border-color:var(--accent-2);color:var(--text-primary)}
-    .chip input:checked + span{background:linear-gradient(135deg,rgba(99,102,241,.28),rgba(139,92,246,.2));border-color:var(--accent-2);color:#fff}
+    .chip input:checked + span{background:linear-gradient(135deg,rgba(13,148,136,.28),rgba(13,148,136,.2));border-color:var(--accent-2);color:#fff}
     /* boutons mono-choix */
     .pick{display:flex;gap:10px;flex-wrap:wrap}
     .pick-btn{flex:1;min-width:110px;padding:11px 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-weight:600;font-size:.88rem;font-family:inherit;cursor:pointer;transition:.2s}
     .pick-btn:hover{border-color:var(--accent-2);color:var(--text-primary)}
-    .pick-btn.on{background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(139,92,246,.18));border-color:var(--accent-2);color:#fff}
+    .pick-btn.on{background:linear-gradient(135deg,rgba(13,148,136,.25),rgba(13,148,136,.18));border-color:var(--accent-2);color:#fff}
     .btn-submit{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--gradient);background-size:200% 200%;color:#fff;font-weight:700;font-size:.98rem;font-family:inherit;cursor:pointer;transition:.25s;margin-top:10px}
-    .btn-submit:hover{background-position:right center;transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.4)}
+    .btn-submit:hover{background-position:right center;transform:translateY(-1px);box-shadow:0 8px 24px rgba(13,148,136,.4)}
     .btn-submit:disabled{opacity:.6;cursor:default;transform:none;box-shadow:none}
     .foot{text-align:center;font-size:.72rem;color:var(--text-muted);margin-top:18px}
     .demo-banner{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:var(--amber);font-size:.8rem;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:18px}
@@ -72,7 +79,7 @@
 <body>
 <div class="wrap">
     <div class="brand">
-        <div class="brand-logo">ERP <span class="dot">Conseil</span></div>
+        <img class="brand-logo-img" src="assets/erp-conseil-logo-dark-transparent.svg" alt="ERP Conseil — Data Analytics & Industrial Performance" width="503" height="177">
         <div class="brand-sub">Demande d'intervention</div>
     </div>
 

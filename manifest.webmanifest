@@ -1,0 +1,16 @@
+{
+  "name": "ERP Conseil — Espace Pro",
+  "short_name": "ERP Conseil",
+  "description": "Gestion des devis, factures, URSSAF et clients — ERP Conseil.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0A0A0A",
+  "icons": [
+    { "src": "assets/erp-conseil-app-icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "assets/erp-conseil-app-icon-1024.png", "type": "image/png", "sizes": "1024x1024", "purpose": "any" },
+    { "src": "assets/erp-conseil-favicon-180.png", "type": "image/png", "sizes": "180x180", "purpose": "maskable" }
+  ]
+}
