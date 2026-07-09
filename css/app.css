@@ -242,9 +242,11 @@ th.amount{text-align:right}
     -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
 .doc-sheet *{box-sizing:border-box}
+/* Coupures propres si le devis passe sur 2 pages : aucun bloc/ligne scindé */
+.doc-parties,.doc-totals,.doc-conditions,.doc-sign,.doc-foot,table.doc-table tr{break-inside:avoid;page-break-inside:avoid}
 
 /* En-tête : logo / titre à gauche, méta à droite */
-.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:14px;border-bottom:2px solid #0B7A6F;margin-bottom:18px}
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:10px;border-bottom:2px solid #0B7A6F;margin-bottom:12px}
 .dh-brand{display:flex;justify-content:flex-start;align-items:flex-start;min-width:0}
 .doc-logo{max-height:180px;max-width:560px;object-fit:contain;object-position:left center;display:block;margin-left:-46px}
 .dc-name{font-size:24px;font-weight:800;color:#1a1a25;letter-spacing:-.01em}
@@ -255,33 +257,33 @@ th.amount{text-align:right}
 .doc-meta .dm-num{font-family:'JetBrains Mono',monospace;font-weight:600;color:#222;font-size:12px}
 
 /* Émetteur / Client en deux colonnes, alignés en haut */
-.doc-parties{display:flex;gap:18px;margin-bottom:16px;align-items:stretch}
-.doc-party{flex:1;border:1px solid #e5e5e5;border-radius:8px;padding:12px 14px}
+.doc-parties{display:flex;gap:18px;margin-bottom:11px;align-items:stretch}
+.doc-party{flex:1;border:1px solid #e5e5e5;border-radius:8px;padding:9px 14px}
 .doc-party-client{background:#f1fbf9;border-color:#cdeee8}
 .dp-title{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#0D9488;font-weight:700;margin-bottom:6px}
 .doc-party p{font-size:11px;color:#555;margin-top:2px}
 .doc-party .dp-strong{font-size:12.5px;font-weight:700;color:#222}
 
 /* Objet */
-.doc-objet{font-size:12px;color:#222;margin-bottom:14px;padding:9px 12px;background:#f7f7fa;border-left:3px solid #0D9488;border-radius:4px}
+.doc-objet{font-size:12px;color:#222;margin-bottom:9px;padding:7px 12px;background:#f7f7fa;border-left:3px solid #0D9488;border-radius:4px}
 .doc-objet .do-label{font-weight:700}
 
 /* Tableau des lignes — largeurs fixes, montants insécables */
-table.doc-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:14px}
+table.doc-table{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:9px}
 table.doc-table col.c-num{width:4%}
 table.doc-table col.c-desc{width:44%}
 table.doc-table col.c-qty{width:8%}
 table.doc-table col.c-unit{width:12%}
 table.doc-table col.c-pu{width:16%}
 table.doc-table col.c-tot{width:16%}
-table.doc-table th{background:#1a1a25;color:#fff;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;padding:9px 10px;text-align:left}
+table.doc-table th{background:#1a1a25;color:#fff;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;padding:6px 10px;text-align:left}
 table.doc-table th.r{text-align:right}
-table.doc-table td{padding:9px 10px;border-bottom:1px solid #eee;font-size:11.5px;color:#222;vertical-align:top;overflow-wrap:break-word;word-wrap:break-word}
+table.doc-table td{padding:6px 10px;border-bottom:1px solid #eee;font-size:11.5px;color:#222;vertical-align:top;overflow-wrap:break-word;word-wrap:break-word}
 table.doc-table td.r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 
 /* Totaux alignés à droite */
-.doc-totals{display:flex;flex-direction:column;align-items:flex-end;margin-bottom:22px}
+.doc-totals{display:flex;flex-direction:column;align-items:flex-end;margin-bottom:12px}
 .doc-totals table{border-collapse:collapse;min-width:260px}
 .doc-totals td{padding:6px 14px;font-size:12px}
 .doc-totals .tt-label{color:#555}
@@ -291,16 +293,16 @@ table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 .doc-tva{font-size:10px;color:#777;font-style:italic;text-align:right;margin-top:7px}
 
 /* Conditions de règlement */
-.doc-conditions{border-top:1px solid #e5e5e5;padding-top:12px;margin-bottom:18px}
+.doc-conditions{border-top:1px solid #e5e5e5;padding-top:9px;margin-bottom:11px}
 .doc-conditions h4{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:5px;font-weight:700}
 .doc-conditions p{font-size:10px;color:#555;margin-bottom:3px}
 
 /* Zone signature (devis uniquement) */
-.doc-sign{margin-bottom:20px}
-.doc-sign .ds-box{border:1px solid #e5e5e5;border-radius:8px;padding:12px 14px;max-width:320px}
+.doc-sign{margin-bottom:12px}
+.doc-sign .ds-box{border:1px solid #e5e5e5;border-radius:8px;padding:10px 14px;max-width:320px}
 .doc-sign .ds-label{font-size:11px;font-weight:700;color:#222}
 .doc-sign .ds-hint{display:block;font-size:9.5px;color:#888;margin-top:2px}
-.doc-sign .ds-line{margin-top:34px;border-top:1px solid #bbb}
+.doc-sign .ds-line{margin-top:24px;border-top:1px solid #bbb}
 
 /* Pied de page légal, centré */
 .doc-foot{border-top:1px solid #e5e5e5;padding-top:9px;font-size:9px;color:#999;text-align:center}
