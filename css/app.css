@@ -243,7 +243,7 @@ th.amount{text-align:right}
 
 /* En-tête : logo / titre à gauche, méta à droite */
 .doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:14px;border-bottom:2px solid #0B7A6F;margin-bottom:18px}
-.doc-logo{max-height:58px;max-width:230px;object-fit:contain;display:block}
+.doc-logo{max-height:104px;max-width:340px;object-fit:contain;display:block}
 .dc-name{font-size:24px;font-weight:800;color:#1a1a25;letter-spacing:-.01em}
 .dc-name .dot{background:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .doc-meta{text-align:right;flex-shrink:0}
