@@ -244,9 +244,9 @@ th.amount{text-align:right}
 .doc-sheet *{box-sizing:border-box}
 
 /* En-tête : logo / titre à gauche, méta à droite */
-.doc-head{display:flex;justify-content:space-between;align-items:center;gap:24px;padding-bottom:14px;border-bottom:2px solid #0B7A6F;margin-bottom:18px}
-.dh-brand{display:flex;justify-content:flex-start;align-items:center;min-width:0}
-.doc-logo{max-height:180px;max-width:560px;object-fit:contain;object-position:left center;display:block}
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:14px;border-bottom:2px solid #0B7A6F;margin-bottom:18px}
+.dh-brand{display:flex;justify-content:flex-start;align-items:flex-start;min-width:0}
+.doc-logo{max-height:180px;max-width:560px;object-fit:contain;object-position:left center;display:block;margin-left:-46px}
 .dc-name{font-size:24px;font-weight:800;color:#1a1a25;letter-spacing:-.01em}
 .dc-name .dot{color:#0B7A6F}
 .doc-meta{text-align:right;flex-shrink:0}
