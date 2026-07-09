@@ -14,7 +14,7 @@
     <meta property="og:description" content="Gestion des devis, factures, URSSAF et clients — ERP Conseil.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://eric8740-stack.github.io/erp-conseil-app/assets/erp-conseil-logo-dark.png">
-    <link rel="stylesheet" href="css/app.css?v=20260709-teal">
+    <link rel="stylesheet" href="css/app.css?v=20260709-corbeille">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -244,6 +244,15 @@
 
         <div class="settings-actions">
             <button class="btn btn-primary" id="saveSettings">Enregistrer les réglages</button>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><h2>Corbeille <span class="muted small" id="trashCount"></span></h2></div>
+            <p class="muted small">Les devis et factures supprimés sont conservés ici : restaurez-les à tout moment, ou supprimez-les définitivement.</p>
+            <div id="trashList"></div>
+            <div class="settings-actions" id="trashActions" hidden>
+                <button class="btn btn-ghost-danger btn-sm" id="emptyTrash">Vider la corbeille</button>
+            </div>
         </div>
 
         <div class="card danger-card">

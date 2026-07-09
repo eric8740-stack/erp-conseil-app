@@ -47,7 +47,8 @@ const DEFAULTS = {
     clients:[
         {id:'cl_demo', name:'A3D Design', address:'', siret:'', contact:'', email:'', phone:''}
     ],
-    documents:[]
+    documents:[],
+    trash:[]   // devis/factures supprimés (récupérables)
 };
 
 /* ---------- Stockage ---------- */
@@ -63,6 +64,7 @@ function load(){
     DB.settings.counters = DB.settings.counters || {};
     DB.clients   = DB.clients   || [];
     DB.documents = DB.documents || [];
+    DB.trash     = DB.trash     || [];
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(DB)); }
 const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
@@ -356,10 +358,65 @@ function saveDoc(){
 }
 function deleteDoc(){
     if(!editing.id) return;
-    if(!confirm('Supprimer définitivement ce document ?')) return;
-    DB.documents = DB.documents.filter(d=>d.id!==editing.id);
-    save(); closeModal('#docModal'); toast('Document supprimé');
-    showView(editing.type==='facture'?'factures':'devis');
+    if(!confirm('Déplacer ce document vers la corbeille ?\nVous pourrez le restaurer depuis Réglages › Corbeille.')) return;
+    const type = editing.type;
+    const idx = DB.documents.findIndex(d=>d.id===editing.id);
+    if(idx>=0){
+        const [doc] = DB.documents.splice(idx,1);
+        doc.deletedAt = Date.now();
+        DB.trash.push(doc);
+    }
+    save(); closeModal('#docModal'); toast('Déplacé vers la corbeille');
+    showView(type==='facture'?'factures':'devis');
+}
+
+/* ============================================================
+   CORBEILLE (suppression réversible)
+   ============================================================ */
+function renderTrash(){
+    const list = $('#trashList'); if(!list) return;
+    const items = (DB.trash||[]).slice().sort((a,b)=> (b.deletedAt||0)-(a.deletedAt||0));
+    $('#trashCount').textContent = items.length ? `(${items.length})` : '';
+    $('#trashActions').hidden = !items.length;
+    if(!items.length){ list.innerHTML = `<p class="muted small" style="margin-top:8px">Corbeille vide.</p>`; return; }
+    list.innerHTML = items.map(d=>{
+        const c = clientById(d.clientId);
+        const kind = d.type==='facture' ? 'Facture' : 'Devis';
+        const when = d.deletedAt ? new Date(d.deletedAt).toLocaleDateString('fr-FR') : '';
+        return `<div class="trash-row">
+            <div class="trash-info">
+                <span class="num-cell">${esc(d.number)}</span>
+                <span class="muted small">${kind} · ${esc(c?c.name:'—')} · ${euro(docTotal(d))}${when?` · supprimé le ${when}`:''}</span>
+            </div>
+            <div class="trash-actions">
+                <button class="btn btn-outline btn-sm" data-restore="${d.id}">Restaurer</button>
+                <button class="btn btn-ghost-danger btn-sm" data-purge="${d.id}">Supprimer</button>
+            </div>
+        </div>`;
+    }).join('');
+    $$('[data-restore]', list).forEach(b=> b.onclick=()=> restoreDoc(b.dataset.restore));
+    $$('[data-purge]',   list).forEach(b=> b.onclick=()=> purgeDoc(b.dataset.purge));
+}
+function restoreDoc(id){
+    const idx = (DB.trash||[]).findIndex(d=>d.id===id);
+    if(idx<0) return;
+    const [doc] = DB.trash.splice(idx,1);
+    delete doc.deletedAt;
+    if(DB.documents.some(d=>d.id===doc.id)) doc.id = uid('doc'); // sécurité anti-doublon
+    DB.documents.push(doc);
+    save(); renderTrash(); toast(`${doc.number} restauré`, 'ok');
+}
+function purgeDoc(id){
+    const doc = (DB.trash||[]).find(d=>d.id===id);
+    if(!doc) return;
+    if(!confirm(`Supprimer définitivement ${doc.number} ?\nCette action est irréversible.`)) return;
+    DB.trash = DB.trash.filter(d=>d.id!==id);
+    save(); renderTrash(); toast('Supprimé définitivement');
+}
+function emptyTrash(){
+    if(!(DB.trash||[]).length) return;
+    if(!confirm(`Vider la corbeille (${DB.trash.length} élément·s) ?\nCette action est irréversible.`)) return;
+    DB.trash = []; save(); renderTrash(); toast('Corbeille vidée');
 }
 function convertToFacture(){
     collectDoc();
@@ -1250,7 +1307,7 @@ function fillSettings(){
     $('#set-demformurl').value=s.demandeFormUrl||'';
     $('#set-appkey').value=s.appKey||'';
     $('#set-urssafperiod').value=s.urssafPeriod||'Mensuelle'; $('#set-urssafrate').value=s.urssafRate||'';
-    renderLogoPreview(); updateNumPreview();
+    renderLogoPreview(); updateNumPreview(); renderTrash();
 }
 function renderLogoPreview(){
     const box = $('#logoPreview');
@@ -1313,6 +1370,7 @@ function importData(file){
             DB = data;
             DB.settings = Object.assign({}, DEFAULTS.settings, DB.settings);
             DB.settings.counters = DB.settings.counters||{};
+            DB.trash = DB.trash||[];
             save(); refreshBrand(); showView('dashboard'); toast('Sauvegarde importée', 'ok');
         }catch(e){ toast('Fichier invalide.', 'err'); }
     };
@@ -1404,6 +1462,7 @@ function init(){
     $('#importData').onclick = ()=> $('#importFile').click();
     $('#importFile').onchange = e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
     $('#resetData').onclick = resetData;
+    $('#emptyTrash').onclick = emptyTrash;
 
     // fermeture modales (ferme la modale parente du bouton, quelle qu'elle soit)
     $$('[data-close]').forEach(b=> b.onclick = ()=> b.closest('.modal-overlay').classList.remove('open'));

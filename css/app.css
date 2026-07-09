@@ -131,6 +131,11 @@ th.amount{text-align:right}
 .form-grid .full{grid-column:1/-1}
 .settings-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
 .danger-card{border-color:#3a2a2a}
+.trash-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.trash-row:last-child{border-bottom:none}
+.trash-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.trash-actions{display:flex;gap:8px;flex-shrink:0}
+#trashActions{margin-top:14px;margin-bottom:0}
 
 /* ---------- Modal ---------- */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:40px 20px;z-index:100;overflow-y:auto}
