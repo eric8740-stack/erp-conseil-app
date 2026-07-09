@@ -1396,6 +1396,7 @@ function bindNewButtons(){
 function init(){
     load(); refreshBrand();
 
+    try{
     // navigation
     $$('.nav-item').forEach(b=> b.onclick = ()=> showView(b.dataset.view));
     $$('[data-view-link]').forEach(b=> b.onclick = ()=> showView(b.dataset.viewLink));
@@ -1468,6 +1469,7 @@ function init(){
     $$('[data-close]').forEach(b=> b.onclick = ()=> b.closest('.modal-overlay').classList.remove('open'));
     $$('.modal-overlay').forEach(o=> o.onclick = e=>{ if(e.target===o) o.classList.remove('open'); });
     document.addEventListener('keydown', e=>{ if(e.key==='Escape') $$('.modal-overlay').forEach(o=>o.classList.remove('open')); });
+    }catch(e){ console.warn('init: un binding a échoué (élément absent, cache mélangé) —', e); }
 
     showView('dashboard');
 }
