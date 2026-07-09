@@ -228,9 +228,11 @@ th.amount{text-align:right}
 /* ===================== PRINT (Devis / Facture PDF) ===================== */
 #printArea{display:none}
 @media print{
-    body *{visibility:hidden}
-    #printArea,#printArea *{visibility:visible}
-    #printArea{display:block;position:absolute;inset:0;background:#fff;color:#222}
+    /* display:none (et non visibility:hidden) pour ne PAS garder la place
+       des éléments cachés — sinon une 2e page blanche apparaît */
+    html,body{display:block;background:#fff !important}
+    body > *{display:none !important}
+    #printArea{display:block !important;position:static;background:#fff;color:#222}
     @page{size:A4;margin:14mm 10mm}
 }
 /* Feuille A4 — couleurs forcées à l'impression pour conserver bandeaux/dégradés */
@@ -242,12 +244,13 @@ th.amount{text-align:right}
 .doc-sheet *{box-sizing:border-box}
 
 /* En-tête : logo / titre à gauche, méta à droite */
-.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:14px;border-bottom:2px solid #0B7A6F;margin-bottom:18px}
-.doc-logo{max-height:180px;max-width:560px;object-fit:contain;display:block}
+.doc-head{display:flex;justify-content:space-between;align-items:center;gap:24px;padding-bottom:14px;border-bottom:2px solid #0B7A6F;margin-bottom:18px}
+.dh-brand{display:flex;justify-content:flex-start;align-items:center;min-width:0}
+.doc-logo{max-height:180px;max-width:560px;object-fit:contain;object-position:left center;display:block}
 .dc-name{font-size:24px;font-weight:800;color:#1a1a25;letter-spacing:-.01em}
-.dc-name .dot{background:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.dc-name .dot{color:#0B7A6F}
 .doc-meta{text-align:right;flex-shrink:0}
-.doc-meta .dm-type{font-size:24px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.doc-meta .dm-type{font-size:24px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#0B7A6F}
 .doc-meta p{font-size:11px;color:#555;margin-top:3px}
 .doc-meta .dm-num{font-family:'JetBrains Mono',monospace;font-weight:600;color:#222;font-size:12px}
 
@@ -284,7 +287,7 @@ table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 .doc-totals .tt-label{color:#555}
 .doc-totals .tt-val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .doc-totals .tt-net td{background:#eefaf7;border-top:1px solid #cdeee8;border-bottom:1px solid #cdeee8;font-size:14px;font-weight:800;padding-top:9px;padding-bottom:9px}
-.doc-totals .tt-net .tt-val{background:linear-gradient(135deg,#0B7A6F,#0D9488,#2CD4C0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.doc-totals .tt-net .tt-val{color:#0B7A6F}
 .doc-tva{font-size:10px;color:#777;font-style:italic;text-align:right;margin-top:7px}
 
 /* Conditions de règlement */
