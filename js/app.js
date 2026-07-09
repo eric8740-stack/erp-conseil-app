@@ -508,7 +508,7 @@ function printDoc(){
             <div class="dh-brand">
                 ${s.logo
                     ? `<img class="doc-logo" src="${s.logo}" alt="${esc(s.name)}">`
-                    : `<div class="dc-name">${escNameBrand(s.name)}</div>`}
+                    : `<img class="doc-logo" src="assets/erp-conseil-logo-doc.png" alt="${esc(s.name)}">`}
             </div>
             <div class="doc-meta">
                 <div class="dm-type">${isFac?'Facture':'Devis'}</div>
