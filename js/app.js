@@ -29,6 +29,7 @@ const DEFAULTS = {
         phone:'06 21 84 90 54',
         iban:'',
         logo:'',          // dataURL du logo (base64)
+        logoTrimmed:false,// true = marges du logo déjà recadrées (auto)
         paydays:30,       // délai de paiement par défaut (jours)
         tva:'TVA non applicable, art. 293 B du CGI',
         payterms:'Paiement à 30 jours à réception de facture, par virement bancaire.',
@@ -1322,10 +1323,51 @@ function renderLogoPreview(){
 function setLogo(file){
     if(file.size > 1024*1024){ toast('Image trop lourde (max 1 Mo).', 'err'); return; }
     const r = new FileReader();
-    r.onload = ()=>{ DB.settings.logo = r.result; save(); renderLogoPreview(); toast('Logo enregistré', 'ok'); };
+    r.onload = async ()=>{
+        DB.settings.logo = await trimLogo(r.result);
+        DB.settings.logoTrimmed = true;
+        save(); renderLogoPreview(); toast('Logo enregistré', 'ok');
+    };
     r.readAsDataURL(file);
 }
-function removeLogo(){ DB.settings.logo=''; save(); renderLogoPreview(); toast('Logo retiré'); }
+/* Recadre les marges transparentes/blanches d'un logo (dataURL → dataURL).
+   Sans ça, un logo type « bannière » à grandes marges internes sort minuscule
+   et décentré sur les PDF (max-height s'applique à l'image entière). */
+function trimLogo(dataURL){
+    return new Promise(resolve=>{
+        const img = new Image();
+        img.onload = ()=>{
+            try{
+                const cv = document.createElement('canvas');
+                cv.width = img.width; cv.height = img.height;
+                const cx = cv.getContext('2d');
+                cx.drawImage(img, 0, 0);
+                const {data} = cx.getImageData(0, 0, img.width, img.height);
+                let x0 = img.width, y0 = img.height, x1 = -1, y1 = -1;
+                for(let y = 0; y < img.height; y++){
+                    for(let x = 0; x < img.width; x++){
+                        const i = (y * img.width + x) * 4;
+                        if(data[i+3] > 8 && !(data[i] > 245 && data[i+1] > 245 && data[i+2] > 245)){
+                            if(x < x0) x0 = x; if(x > x1) x1 = x;
+                            if(y < y0) y0 = y; if(y > y1) y1 = y;
+                        }
+                    }
+                }
+                if(x1 < 0 || x1 - x0 < 10 || y1 - y0 < 10){ resolve(dataURL); return; }
+                const pad = Math.round((y1 - y0) * 0.04);
+                x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad);
+                x1 = Math.min(img.width - 1, x1 + pad); y1 = Math.min(img.height - 1, y1 + pad);
+                const out = document.createElement('canvas');
+                out.width = x1 - x0 + 1; out.height = y1 - y0 + 1;
+                out.getContext('2d').drawImage(cv, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+                resolve(out.toDataURL('image/png'));
+            }catch(e){ resolve(dataURL); }
+        };
+        img.onerror = ()=> resolve(dataURL);
+        img.src = dataURL;
+    });
+}
+function removeLogo(){ DB.settings.logo=''; DB.settings.logoTrimmed=false; save(); renderLogoPreview(); toast('Logo retiré'); }
 function updateNumPreview(){
     const y=new Date().getFullYear();
     $('#numPreview').textContent = `${$('#set-devprefix').value||'DEV'}-${y}-001  ·  ${$('#set-facprefix').value||'FAC'}-${y}-001`;
@@ -1395,6 +1437,11 @@ function bindNewButtons(){
 }
 function init(){
     load(); refreshBrand();
+
+    // migration : recadre une seule fois un logo enregistré avant l'auto-recadrage
+    if(DB.settings.logo && !DB.settings.logoTrimmed){
+        trimLogo(DB.settings.logo).then(t=>{ DB.settings.logo = t; DB.settings.logoTrimmed = true; save(); });
+    }
 
     try{
     // navigation
