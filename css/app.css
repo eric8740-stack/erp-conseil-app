@@ -309,11 +309,15 @@ table.doc-table tbody tr:nth-child(even){background:#f8f8fb}
 .doc-conditions h4{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:5px;font-weight:700}
 .doc-conditions p{font-size:10px;color:#555;margin-bottom:3px}
 
-/* Encart règlement (IBAN + échéance) */
-.doc-pay{margin-top:7px;border:1px solid #cdeee8;background:#f6fcfb;border-radius:8px;padding:8px 12px;max-width:440px}
+/* Encart règlement (IBAN + échéance + QR virement SEPA) */
+.doc-pay{margin-top:7px;border:1px solid #cdeee8;background:#f6fcfb;border-radius:8px;padding:8px 12px;max-width:520px;
+    display:flex;justify-content:space-between;align-items:center;gap:14px}
 .doc-pay .pay-title{font-size:10.5px;color:#222;font-weight:600}
 .doc-pay .pay-title strong{color:#0B7A6F}
 .doc-pay .pay-iban{font-family:'JetBrains Mono',monospace;font-size:11px;color:#222;margin-top:4px;letter-spacing:.02em}
+.doc-pay .pay-qr{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.doc-pay .pay-qr img{width:86px;height:86px;display:block}
+.doc-pay .pay-qr span{font-size:8.5px;color:#666;line-height:1.45}
 
 /* Zone signature (devis uniquement) */
 .doc-sign{margin-bottom:12px}

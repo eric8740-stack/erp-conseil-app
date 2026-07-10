@@ -488,6 +488,26 @@ function sendDocEmail(){
 /* ============================================================
    IMPRESSION / PDF
    ============================================================ */
+/* QR de virement SEPA (norme EPC069-12 « Scan2Pay ») : scanné avec une appli
+   bancaire, le virement arrive pré-rempli (bénéficiaire, IBAN, montant, réf). */
+function epcQrDataUrl(number, total){
+    if(typeof qrcode !== 'function') return '';
+    const s = DB.settings;
+    const iban = (s.iban||'').replace(/\s+/g,'').toUpperCase();
+    if(!iban || !(total > 0) || total > 999999999.99) return '';
+    // caractères accentués/typographiques → ASCII (jeu de caractères sûr pour les applis bancaires)
+    const clean = t => t.normalize('NFD').replace(/[̀-ͯ]/g,'')
+        .replace(/[—–]/g,'-').replace(/[^A-Za-z0-9 .,:()/+'-]/g,' ').replace(/\s+/g,' ').trim();
+    const name = clean(s.owner || s.name || '').slice(0,70);
+    const payload = ['BCD','002','1','SCT','', name, iban,
+        'EUR'+total.toFixed(2), '', '', clean('Facture '+number).slice(0,140)].join('\n');
+    try{
+        const qr = qrcode(0, 'M');
+        qr.addData(payload, 'Byte');
+        qr.make();
+        return qr.createDataURL(4, 8);
+    }catch(e){ return ''; }
+}
 function printDoc(){
     collectDoc();
     const s = DB.settings, c = clientById(editing.clientId) || {};
@@ -565,10 +585,18 @@ function printDoc(){
             <h4>Conditions de règlement</h4>
             <p>${esc(s.payterms)}</p>
             <p>Pénalités de retard : 3 fois le taux d'intérêt légal en vigueur. Indemnité forfaitaire pour frais de recouvrement : 40 € (art. L441-10 et D441-5 C. com.).</p>
-            ${s.iban?`<div class="doc-pay">
-                <div class="pay-title">Règlement par virement bancaire${isFac && editing.dueDate && editing.status!=='payee' ? ` — avant le <strong>${frDate(editing.dueDate)}</strong>`:''}</div>
-                <div class="pay-iban">IBAN : ${esc(s.iban)}</div>
-            </div>`:''}
+            ${s.iban?(()=>{
+                const qrUrl = isFac && editing.status!=='payee' ? epcQrDataUrl(editing.number, total) : '';
+                return `<div class="doc-pay">
+                <div class="pay-info">
+                    <div class="pay-title">Règlement par virement bancaire${isFac && editing.dueDate && editing.status!=='payee' ? ` — avant le <strong>${frDate(editing.dueDate)}</strong>`:''}</div>
+                    <div class="pay-iban">IBAN : ${esc(s.iban)}</div>
+                </div>
+                ${qrUrl?`<div class="pay-qr">
+                    <img src="${qrUrl}" alt="QR code de virement SEPA">
+                    <span>Scannez avec votre<br>appli bancaire :<br>virement pré-rempli</span>
+                </div>`:''}
+            </div>`;})():''}
         </div>
 
         ${!isFac ? `<div class="doc-sign">
