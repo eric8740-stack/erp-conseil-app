@@ -30,6 +30,7 @@ const DEFAULTS = {
         iban:'',
         logo:'',          // dataURL du logo (base64)
         logoTrimmed:false,// true = marges du logo déjà recadrées (auto)
+        lastExport:'',    // date ISO du dernier export de sauvegarde
         paydays:30,       // délai de paiement par défaut (jours)
         tva:'TVA non applicable, art. 293 B du CGI',
         payterms:'Paiement à 30 jours à réception de facture, par virement bancaire.',
@@ -67,7 +68,18 @@ function load(){
     DB.documents = DB.documents || [];
     DB.trash     = DB.trash     || [];
 }
-function save(){ localStorage.setItem(KEY, JSON.stringify(DB)); }
+function save(quiet){
+    try{ localStorage.setItem(KEY, JSON.stringify(DB)); }
+    catch(e){
+        // stockage navigateur plein : rien n'a été persisté — ne jamais échouer en silence
+        if(quiet) return;
+        if(confirm("⚠ ENREGISTREMENT IMPOSSIBLE : le stockage du navigateur est plein.\n\n" +
+            "Vos dernières modifications ne sont PAS sauvegardées.\n" +
+            "Exporter toutes vos données maintenant (fortement recommandé) ?")){
+            exportData();
+        }
+    }
+}
 const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 
 /* ---------- Utilitaires ---------- */
@@ -92,7 +104,13 @@ function nextNumber(type){
     const prefix = type === 'facture' ? s.facprefix : s.devprefix;
     const year = new Date().getFullYear();
     const key = `${prefix}-${year}`;
-    const n = (s.counters[key] || 0) + 1;
+    // repartir du max entre le compteur et les numéros existants : évite tout
+    // doublon si le compteur est désynchronisé (import, restauration, corbeille)
+    const re = new RegExp('^' + key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '-(\\d+)$');
+    const maxExisting = DB.documents.concat(DB.trash||[]).reduce((m,d)=>{
+        const mt = re.exec(d.number||''); return mt ? Math.max(m, +mt[1]) : m;
+    }, 0);
+    const n = Math.max(s.counters[key] || 0, maxExisting) + 1;
     return { number:`${prefix}-${year}-${String(n).padStart(3,'0')}`, key, n };
 }
 function commitNumber(key,n){ DB.settings.counters[key] = n; }
@@ -138,10 +156,25 @@ function renderDashboard(){
         ${kpi("Taux d'acceptation", txAccept+' %', `${accepted.length}/${devis.length} accepté(s)`)}
     `;
     renderUrssafReminder();
+    renderBackupReminder();
     renderRelances(factures);
     $('#recentDevis').innerHTML    = miniList(devis);
     $('#recentFactures').innerHTML = miniList(factures);
     bindMiniRows();
+}
+function renderBackupReminder(){
+    const box = $('#backupReminder'); if(!box) return;
+    if(!DB.documents.length){ box.innerHTML=''; return; }
+    const last = DB.settings.lastExport || '';
+    const days = last ? Math.floor((new Date(todayISO()) - new Date(last)) / 86400000) : Infinity;
+    if(days < 7){ box.innerHTML=''; return; }
+    box.innerHTML = `<div class="backup-reminder">
+        <div class="br-text"><strong>💾 Pensez à sauvegarder vos données</strong><br>
+        <span>${last ? `Dernière sauvegarde exportée il y a ${days} jour(s).` : `Aucune sauvegarde exportée pour l'instant.`}
+        Vos devis et factures ne vivent que dans ce navigateur.</span></div>
+        <button class="btn btn-primary" id="backupNow">⭳ Exporter maintenant</button>
+    </div>`;
+    $('#backupNow').onclick = ()=>{ exportData(); renderBackupReminder(); };
 }
 function renderRelances(factures){
     const late = factures.filter(isOverdue).sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
@@ -157,8 +190,32 @@ function renderRelances(factures){
                     <div class="amount">${euro(docTotal(f))}</div>
                     <div class="relance-late">échéance ${frDate(f.dueDate)} · +${daysLate(f.dueDate)} j</div>
                 </div>
+                <button class="btn btn-outline relance-btn" data-relance="${f.id}">✉ Relancer</button>
             </div>`;}).join('')}
     </div>`;
+    $$('[data-relance]', box).forEach(b=> b.onclick = e=>{ e.stopPropagation(); relanceEmail(b.dataset.relance); });
+}
+function relanceEmail(id){
+    const f = DB.documents.find(d=>d.id===id); if(!f) return;
+    const c = clientById(f.clientId) || {};
+    const email = (c.email||'').trim();
+    if(!email){ toast('Ajoutez un email à ce client (fiche client) pour le relancer.', 'err'); return; }
+    const s = DB.settings;
+    const montant = docTotal(f).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const greet = c.contact || c.name || 'Madame, Monsieur';
+    const lines = [
+        'Bonjour ' + greet + ',',
+        '',
+        'Sauf erreur de ma part, la facture ' + f.number + " d'un montant de " + montant +
+            ' €' + (f.dueDate ? ' (échéance au ' + frDate(f.dueDate) + ')' : '') + ' reste impayée à ce jour.',
+        'Je vous remercie de bien vouloir procéder à son règlement.'
+    ];
+    if(s.iban) lines.push('Règlement par virement — IBAN : ' + s.iban + '.');
+    lines.push('', "Si votre règlement s'est croisé avec ce message, merci de ne pas en tenir compte.",
+        '', 'Bien cordialement,', s.owner||'', 'ERP Conseil — ' + (s.phone||''));
+    window.location.href = 'mailto:' + email
+        + '?subject=' + encodeURIComponent('Relance — Facture ' + f.number + ' — ERP Conseil')
+        + '&body=' + encodeURIComponent(lines.join('\r\n'));
 }
 const kpi = (label,val,sub) => `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${val}</div><div class="kpi-sub">${esc(sub)}</div></div>`;
 
@@ -248,6 +305,24 @@ function openDoc(id){
     editing = structuredClone(d);
     openDocModal();
 }
+function duplicateDoc(){
+    if(!editing.id) return;
+    collectDoc();
+    const { number, key, n } = nextNumber(editing.type);
+    pendingNumberKey = { key, n };
+    editing = structuredClone(editing);
+    editing.id = null;
+    editing.number = number;
+    editing.status = 'brouillon';
+    editing.date = todayISO();
+    if(editing.type==='facture'){
+        editing.dueDate = addDaysISO(todayISO(), DB.settings.paydays);
+        editing.paidDate = ''; editing.serviceDate = '';
+    }
+    delete editing.sourceDevis;
+    openDocModal();
+    toast('Copie créée (' + number + ') — pensez à Enregistrer', 'ok');
+}
 function openDocModal(){
     const isFac = editing.type==='facture';
     $('#docModalTitle').textContent = (isFac?'Facture ':'Devis ') + editing.number;
@@ -276,6 +351,7 @@ function openDocModal(){
 
     renderLines();
     $('#deleteDoc').hidden  = !editing.id;
+    $('#duplicateDoc').hidden = !editing.id;
     // convertir : seulement pour un devis existant accepté/envoyé
     $('#convertDoc').hidden = !(editing.type==='devis' && editing.id);
 
@@ -1434,6 +1510,8 @@ function refreshBrand(){
 
 /* ---------- Export / Import / Reset ---------- */
 function exportData(){
+    DB.settings.lastExport = todayISO();
+    save(true); // quiet : l'export doit aboutir même si le stockage est plein
     const blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1501,6 +1579,7 @@ function init(){
     $('#addLine').onclick   = ()=>{ editing.lines.push({designation:'',qty:1,unit:'forfait',pu:0}); renderLines(); };
     $('#saveDoc').onclick   = saveDoc;
     $('#deleteDoc').onclick = deleteDoc;
+    $('#duplicateDoc').onclick = duplicateDoc;
     $('#printDoc').onclick  = printDoc;
     $('#sendDocEmail').onclick = sendDocEmail;
     $('#convertDoc').onclick= convertToFacture;

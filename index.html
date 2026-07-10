@@ -14,7 +14,7 @@
     <meta property="og:description" content="Gestion des devis, factures, URSSAF et clients — ERP Conseil.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://eric8740-stack.github.io/erp-conseil-app/assets/erp-conseil-logo-dark.png">
-    <link rel="stylesheet" href="css/app.css?v=qr-sepa">
+    <link rel="stylesheet" href="css/app.css?v=protections">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -63,6 +63,8 @@
         <div class="kpi-grid" id="kpiGrid"></div>
 
         <div id="urssafReminder"></div>
+
+        <div id="backupReminder"></div>
 
         <div id="relancesCard"></div>
 
@@ -317,6 +319,7 @@
             <span class="spacer"></span>
             <button class="btn btn-outline" data-close>Annuler</button>
             <button class="btn btn-outline" id="convertDoc" hidden>→ Convertir en facture</button>
+            <button class="btn btn-outline" id="duplicateDoc" hidden>⧉ Dupliquer</button>
             <button class="btn btn-outline" id="reviewLinkDoc">⭐ Lien d'avis</button>
             <button class="btn btn-outline" id="sendDocEmail">📧 Envoyer au client</button>
             <button class="btn btn-secondary" id="printDoc">🖨 Aperçu / PDF</button>
@@ -408,6 +411,6 @@
 <div id="toast" class="toast"></div>
 
 <script src="js/vendor/qrcode.js?v=1.4.4"></script>
-<script src="js/app.js?v=qr-sepa"></script>
+<script src="js/app.js?v=protections"></script>
 </body>
 </html>

@@ -225,6 +225,17 @@ th.amount{text-align:right}
 .urssaf-reminder .ur-body{color:var(--text-secondary);font-size:.92rem;margin-top:6px}
 .urssaf-reminder .ur-link{display:inline-block;margin-top:10px;font-weight:600}
 
+/* Rappel de sauvegarde (export localStorage) */
+.backup-reminder{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(135deg,rgba(245,158,11,.13),rgba(245,158,11,.05));
+    border:1px solid #4a3a2a;border-radius:var(--radius);padding:16px 20px;margin-bottom:24px}
+.backup-reminder .br-text{font-size:.92rem}
+.backup-reminder .br-text span{color:var(--text-secondary)}
+.backup-reminder strong{color:var(--amber)}
+
+/* Bouton relance dans la carte des retards */
+.relance-btn{flex-shrink:0;font-size:.8rem;padding:6px 12px}
+
 /* ===================== PRINT (Devis / Facture PDF) ===================== */
 #printArea{display:none}
 @media print{
