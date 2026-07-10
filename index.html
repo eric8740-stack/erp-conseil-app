@@ -14,7 +14,7 @@
     <meta property="og:description" content="Gestion des devis, factures, URSSAF et clients — ERP Conseil.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://eric8740-stack.github.io/erp-conseil-app/assets/erp-conseil-logo-dark.png">
-    <link rel="stylesheet" href="css/app.css?v=protections">
+    <link rel="stylesheet" href="css/app.css?v=acomptes">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -289,6 +289,7 @@
                 <label id="doc-prestation-wrap">Date de la prestation<input id="doc-prestation" type="date"></label>
                 <label id="doc-echeance-wrap">Échéance de paiement<input id="doc-echeance" type="date"></label>
                 <label id="doc-paid-wrap">Date d'encaissement<input id="doc-paid" type="date"></label>
+                <label id="doc-deposit-wrap" title="Montant HT d'une facture d'acompte déjà émise pour cette mission — déduit du net à payer">Acompte déjà facturé (€)<input id="doc-deposit" type="number" min="0" step="0.01" placeholder="0"></label>
             </div>
 
             <div class="client-pick">
@@ -309,6 +310,7 @@
             <div class="totals">
                 <div class="tva-note" id="doc-tvanote"></div>
                 <div class="total-line"><span>Total HT</span><strong id="doc-totalht">0,00 €</strong></div>
+                <div class="total-line" id="doc-acompte-line" hidden><span>Acompte déjà facturé</span><strong id="doc-acompte">0,00 €</strong></div>
                 <div class="total-line big"><span>Net à payer</span><strong id="doc-totalnet">0,00 €</strong></div>
             </div>
 
@@ -411,6 +413,6 @@
 <div id="toast" class="toast"></div>
 
 <script src="js/vendor/qrcode.js?v=1.4.4"></script>
-<script src="js/app.js?v=protections"></script>
+<script src="js/app.js?v=acomptes"></script>
 </body>
 </html>

@@ -88,7 +88,12 @@ const todayISO = () => new Date().toISOString().slice(0,10);
 function frDate(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const clientById = id => DB.clients.find(c => c.id === id);
-function docTotal(doc){ return (doc.lines||[]).reduce((s,l)=> s + (Number(l.qty)||0)*(Number(l.pu)||0), 0); }
+function docLinesTotal(doc){ return (doc.lines||[]).reduce((s,l)=> s + (Number(l.qty)||0)*(Number(l.pu)||0), 0); }
+/* Net à payer : total des lignes − acompte déjà facturé (facture uniquement).
+   Utilisé partout (CA, URSSAF, relances, QR) pour ne jamais compter deux fois
+   un acompte facturé séparément. */
+function docTotal(doc){ return docLinesTotal(doc) - (doc.type==='facture' ? (Number(doc.deposit)||0) : 0); }
+function siretValid(){ return /^\d{14}$/.test((DB.settings.siret||'').replace(/\D/g,'')); }
 function addDaysISO(iso, days){ const d = new Date(iso||todayISO()); d.setDate(d.getDate()+(Number(days)||0)); return d.toISOString().slice(0,10); }
 function isOverdue(doc){ return doc.type==='facture' && doc.status!=='payee' && doc.dueDate && doc.dueDate < todayISO(); }
 function daysLate(iso){ return Math.floor((new Date(todayISO()) - new Date(iso)) / 86400000); }
@@ -335,6 +340,8 @@ function openDocModal(){
     $('#doc-echeance-wrap').style.display = isFac ? '' : 'none';
     $('#doc-prestation').value = editing.serviceDate || '';
     $('#doc-prestation-wrap').style.display = isFac ? '' : 'none';
+    $('#doc-deposit').value = editing.deposit || '';
+    $('#doc-deposit-wrap').style.display = isFac ? '' : 'none';
     $('#doc-objet').value    = editing.objet || '';
     $('#doc-notes').value    = editing.notes || '';
     $('#doc-tvanote').textContent = DB.settings.tva;
@@ -396,9 +403,12 @@ function renderLines(){
     updateTotals();
 }
 function updateTotals(){
-    const t = docTotal(editing);
-    $('#doc-totalht').textContent  = euro(t);
-    $('#doc-totalnet').textContent = euro(t);
+    const lt  = docLinesTotal(editing);
+    const dep = editing.type==='facture' ? (Number(editing.deposit)||0) : 0;
+    $('#doc-totalht').textContent  = euro(lt);
+    $('#doc-acompte-line').hidden  = !(dep > 0);
+    $('#doc-acompte').textContent  = '− ' + euro(dep);
+    $('#doc-totalnet').textContent = euro(lt - dep);
 }
 function collectDoc(){
     editing.number   = $('#doc-number').value.trim();
@@ -412,6 +422,7 @@ function collectDoc(){
         editing.dueDate  = $('#doc-echeance').value;
         editing.paidDate = $('#doc-status').value==='payee' ? ($('#doc-paid').value||todayISO()) : '';
         editing.serviceDate = $('#doc-prestation').value;
+        editing.deposit  = Math.max(0, Number($('#doc-deposit').value)||0);
     }
 }
 function saveDoc(){
@@ -435,6 +446,12 @@ function saveDoc(){
 }
 function deleteDoc(){
     if(!editing.id) return;
+    // conformité : une facture émise ne se supprime pas (numérotation continue)
+    const saved = DB.documents.find(d=>d.id===editing.id);
+    if(editing.type==='facture' && saved && saved.status!=='brouillon'){
+        toast("Une facture émise ne peut pas être supprimée (numérotation continue obligatoire). Émettez un avoir, ou repassez-la en brouillon si elle n'a jamais été envoyée.", 'err');
+        return;
+    }
     if(!confirm('Déplacer ce document vers la corbeille ?\nVous pourrez le restaurer depuis Réglages › Corbeille.')) return;
     const type = editing.type;
     const idx = DB.documents.findIndex(d=>d.id===editing.id);
@@ -531,6 +548,10 @@ function updateSendDocBtn(){
 }
 function sendDocEmail(){
     collectDoc();
+    if(editing.type==='facture' && !siretValid()){
+        toast('SIRET manquant ou invalide dans Réglages — obligatoire sur une facture.', 'err');
+        return;
+    }
     const c = clientById(editing.clientId) || {};
     const email = (c.email||'').trim();
     if(!email){ toast("Ajoutez un email au client pour activer l'envoi.", 'err'); return; }
@@ -588,7 +609,13 @@ function printDoc(){
     collectDoc();
     const s = DB.settings, c = clientById(editing.clientId) || {};
     const isFac = editing.type==='facture';
+    if(isFac && !siretValid()){
+        toast('SIRET manquant ou invalide dans Réglages — obligatoire sur une facture.', 'err');
+        return;
+    }
     const total = docTotal(editing);
+    const linesTotal = docLinesTotal(editing);
+    const deposit = isFac ? (Number(editing.deposit)||0) : 0;
     const rows = editing.lines.map((l,i)=>`
         <tr>
             <td>${i+1}</td>
@@ -651,7 +678,8 @@ function printDoc(){
 
         <div class="doc-totals">
             <table>
-                <tr><td class="tt-label">Total HT</td><td class="tt-val">${euro(total)}</td></tr>
+                <tr><td class="tt-label">Total HT</td><td class="tt-val">${euro(linesTotal)}</td></tr>
+                ${deposit>0?`<tr><td class="tt-label">Acompte déjà facturé</td><td class="tt-val">− ${euro(deposit)}</td></tr>`:''}
                 <tr class="tt-net"><td>Net à payer</td><td class="tt-val">${euro(total)}</td></tr>
             </table>
             <div class="doc-tva">${esc(s.tva)}</div>
@@ -1585,6 +1613,7 @@ function init(){
     $('#convertDoc').onclick= convertToFacture;
     $('#reviewLinkDoc').onclick = ()=> openReviewModal(editing.clientId, editing.number||'');
     $('#doc-client').onchange = e=>{ if(e.target.value==='__new'){ newClient(true);} else { editing.clientId=e.target.value; } updateSendDocBtn(); };
+    $('#doc-deposit').oninput = ()=>{ editing.deposit = Math.max(0, Number($('#doc-deposit').value)||0); updateTotals(); };
     $('#doc-status').onchange = updatePaidVisibility;
 
     // éditeur client
