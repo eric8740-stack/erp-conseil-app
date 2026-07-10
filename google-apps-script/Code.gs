@@ -104,6 +104,21 @@ function doPost(e){
    LECTURE (doGet) — tri par Date desc, pagination
    ============================================================ */
 function doGet(e){
+  // Route PUBLIQUE (vitrine) : uniquement les avis cochés « Publier sur le site »,
+  // sans clé — champs limités, jamais l'email.
+  if(e && e.parameter && e.parameter.public === 'avis'){
+    try{
+      const suffix = '?pageSize=100&filterByFormula=' + encodeURIComponent('{Publier sur le site}') +
+        '&sort%5B0%5D%5Bfield%5D=Date&sort%5B0%5D%5Bdirection%5D=desc';
+      const res = airtableFetch_('GET', T_SATISF, suffix, null);
+      return jsonOut_({ ok: true, records: (res.records || []).map(function(r){
+        const f = r.fields || {};
+        return { client: f['Client'] || '', mission: f['Mission'] || '',
+                 note: f['Note globale'] || 0, commentaire: f['Commentaire'] || '',
+                 date: f['Date'] || '' };
+      })});
+    }catch(err){ return jsonOut_({ ok: false, error: String(err), records: [] }); }
+  }
   // Sécurité : la lecture exige la bonne clé (?key=). Propriété de script READ_KEY.
   if(((e && e.parameter && e.parameter.key) || '') !== PropertiesService.getScriptProperties().getProperty('READ_KEY')){
     return jsonOut_({ ok: false, error: 'unauthorized' });
