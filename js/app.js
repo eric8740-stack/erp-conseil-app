@@ -505,6 +505,8 @@ function printDoc(){
 
     $('#printArea').innerHTML = `
     <div class="doc-sheet">
+        <div class="doc-band"></div>
+        ${editing.status==='brouillon' ? `<div class="doc-wm">Brouillon</div>` : ''}
         <header class="doc-head">
             <div class="dh-brand">
                 ${s.logo
@@ -519,6 +521,7 @@ function printDoc(){
                 ${isFac ? `<p>Prestation : ${frDate(editing.serviceDate || editing.date)}</p>`:''}
                 ${isFac && editing.dueDate ? `<p>Échéance : ${frDate(editing.dueDate)}</p>`:''}
                 ${isFac && editing.sourceDevis ? `<p>Réf. devis : ${esc(editing.sourceDevis)}</p>`:''}
+                ${isFac && editing.status==='payee' ? `<p><span class="dm-paid">Payée le ${frDate(editing.paidDate||editing.date)}</span></p>`:''}
             </div>
         </header>
 
@@ -562,13 +565,17 @@ function printDoc(){
             <h4>Conditions de règlement</h4>
             <p>${esc(s.payterms)}</p>
             <p>Pénalités de retard : 3 fois le taux d'intérêt légal en vigueur. Indemnité forfaitaire pour frais de recouvrement : 40 € (art. L441-10 et D441-5 C. com.).</p>
-            ${s.iban?`<p>IBAN : ${esc(s.iban)}</p>`:''}
+            ${s.iban?`<div class="doc-pay">
+                <div class="pay-title">Règlement par virement bancaire${isFac && editing.dueDate && editing.status!=='payee' ? ` — avant le <strong>${frDate(editing.dueDate)}</strong>`:''}</div>
+                <div class="pay-iban">IBAN : ${esc(s.iban)}</div>
+            </div>`:''}
         </div>
 
         ${!isFac ? `<div class="doc-sign">
             <div class="ds-box">
                 <span class="ds-label">Bon pour accord</span>
                 <span class="ds-hint">Date et signature du client, précédées de la mention « Bon pour accord »</span>
+                <div class="ds-fields"><span>Fait à ______________________</span><span>le ____ / ____ / ________</span></div>
                 <div class="ds-line"></div>
             </div>
         </div>`:''}
@@ -576,6 +583,10 @@ function printDoc(){
         <div class="doc-foot">${esc(s.legal).replace(/\n/g,'<br>')}</div>
     </div>`;
 
+    // titre de l'onglet = nom de fichier proposé pour le PDF
+    const prevTitle = document.title;
+    document.title = `${isFac?'Facture':'Devis'} ${editing.number} — ${s.name}`;
+    window.addEventListener('afterprint', ()=>{ document.title = prevTitle; }, {once:true});
     setTimeout(()=> window.print(), 60);
 }
 function escNameBrand(name){
