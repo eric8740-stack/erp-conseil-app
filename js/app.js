@@ -44,7 +44,9 @@ const DEFAULTS = {
         demandeFormUrl:'',// URL publique de demande.html (formulaire de demande d'intervention)
         appKey:'',        // clé de lecture (sécurité) — doit correspondre à READ_KEY côté Apps Script
         urssafPeriod:'Trimestrielle', // périodicité de déclaration URSSAF (Mensuelle / Trimestrielle)
-        urssafRate:''     // taux de cotisations (%) optionnel, pour l'estimation
+        urssafRate:'',    // taux de cotisations (%) optionnel, pour l'estimation
+        activityStart:'2026-06-13',   // début d'activité (1re déclaration : règle des 90 jours)
+        acreUntil:'2027-03-31'        // fin du taux minoré ACRE (attestation URSSAF)
     },
     clients:[
         {id:'cl_demo', name:'A3D Design', address:'', siret:'', contact:'', email:'', phone:''}
@@ -1125,11 +1127,50 @@ function exportUrssafCsv(){
     toast('Livre des recettes exporté', 'ok');
 }
 /* Prochaine échéance de déclaration + CA de la période close concernée */
+/* Première déclaration (règle des 90 jours) : elle couvre du début d'activité à
+   la fin du trimestre civil suivant (trimestriel) ou du 3e mois civil suivant
+   (mensuel), et se fait le mois d'après. Ex. début 13/06 trimestriel →
+   période 13/06→30/09, déclaration entre le 1er et le 31 octobre. */
+function urssafFirstDue(){
+    const startAct = DB.settings.activityStart || '';
+    if(!startAct) return null;
+    const d = new Date(startAct);
+    if(isNaN(d)) return null;
+    const pad = n => String(n).padStart(2,'0');
+    const mensuel = (DB.settings.urssafPeriod==='Mensuelle');
+    let endY = d.getFullYear(), endM; // fin de période (mois 1-12)
+    if(mensuel){
+        endM = d.getMonth()+1+3;
+        if(endM>12){ endM-=12; endY++; }
+    }else{
+        let nq = Math.floor(d.getMonth()/3)+2; // trimestre civil suivant
+        if(nq>4){ nq-=4; endY++; }
+        endM = nq*3;
+    }
+    const endDay = new Date(endY, endM, 0).getDate();
+    let dlY = endY, dlM = endM+1; if(dlM>12){ dlM=1; dlY++; }
+    const dlDay = new Date(dlY, dlM, 0).getDate();
+    return {
+        start: startAct,
+        end: `${endY}-${pad(endM)}-${pad(endDay)}`,
+        deadline: `${dlY}-${pad(dlM)}-${pad(dlDay)}`,
+        periodLabel: `1re déclaration — du ${frDate(startAct)} au ${frDate(`${endY}-${pad(endM)}-${pad(endDay)}`)}`
+    };
+}
 function urssafNextDue(){
     const mensuel = (DB.settings.urssafPeriod==='Mensuelle');
     const now = new Date(), today = todayISO();
     const pad = n => String(n).padStart(2,'0');
     let start, end, periodLabel, deadline;
+
+    // tant que la 1re échéance (règle des 90 jours) n'est pas passée, c'est elle
+    const first = urssafFirstDue();
+    if(first && today <= first.deadline){
+        const ca0 = DB.documents.filter(d=> d.type==='facture' && d.status==='payee' && d.paidDate && d.paidDate>=first.start && d.paidDate<=first.end)
+                                .reduce((s,f)=> s+docTotal(f), 0);
+        const days0 = Math.ceil((new Date(first.deadline) - new Date(today)) / 86400000);
+        return Object.assign({}, first, { ca: ca0, daysUntil: days0, isFirst: true });
+    }
 
     if(mensuel){
         // période close = mois précédent ; échéance = fin du mois courant
@@ -1161,11 +1202,26 @@ function urssafNextDue(){
 function renderUrssafReminder(){
     const box = $('#urssafReminder'); if(!box) return;
     const d = urssafNextDue();
-    const urgent = d.daysUntil < 10;
-    box.innerHTML = `<div class="urssaf-reminder${urgent?' urgent':''}">
-        <div class="ur-head">🧾 Prochaine déclaration URSSAF : <strong>${frDate(d.deadline)}</strong>${urgent?` <span class="ur-badge">dans ${Math.max(0,d.daysUntil)} j</span>`:''}</div>
-        <div class="ur-body">CA encaissé à déclarer (${esc(d.periodLabel)}) : <strong>${euro(d.ca)}</strong></div>
-        <a class="ur-link link" href="https://www.autoentrepreneur.urssaf.fr" target="_blank" rel="noopener">Déclarer sur autoentrepreneur.urssaf.fr →</a>
+    const days = Math.max(0, d.daysUntil);
+    const level = d.daysUntil <= 7 ? 'urgent' : (d.daysUntil <= 30 ? 'warn' : 'ok');
+    // fenêtre de déclaration : elle ouvre le 1er du mois de l'échéance
+    const openDate = d.deadline.slice(0,8) + '01';
+    const isOpen = todayISO() >= openDate;
+    const acre = DB.settings.acreUntil || '';
+    box.innerHTML = `<div class="urssaf-reminder${d.daysUntil<=7?' urgent':''}">
+        <div class="ur-flex">
+            <div>
+                <div class="ur-head">🧾 ${d.isFirst?'Première déclaration URSSAF':'Prochaine déclaration URSSAF'} : <strong>${frDate(d.deadline)}</strong></div>
+                <div class="ur-body">CA encaissé à déclarer (${esc(d.periodLabel)}) : <strong>${euro(d.ca)}</strong></div>
+                ${d.isFirst?`<div class="ur-body">À faire entre le <strong>${frDate(openDate)}</strong> et le <strong>${frDate(d.deadline)}</strong> (règle des 90 jours pour un début d'activité au ${frDate(DB.settings.activityStart)}).</div>`:''}
+                ${acre && acre >= todayISO() ? `<div class="ur-acre">✓ Taux de cotisations minoré ACRE (−50 %) jusqu'au <strong>${frDate(acre)}</strong></div>`:''}
+                <a class="ur-link link" href="https://www.autoentrepreneur.urssaf.fr" target="_blank" rel="noopener">${isOpen?'Déclarer maintenant sur autoentrepreneur.urssaf.fr →':'autoentrepreneur.urssaf.fr →'}</a>
+            </div>
+            <div class="ur-countdown cd-${level}" title="Jours restants avant l'échéance">
+                <span class="cd-num">J−${days}</span>
+                <span class="cd-sub">${isOpen?'déclaration ouverte':'échéance '+frDate(d.deadline)}</span>
+            </div>
+        </div>
     </div>`;
 }
 
@@ -1451,6 +1507,7 @@ function fillSettings(){
     $('#set-demformurl').value=s.demandeFormUrl||'';
     $('#set-appkey').value=s.appKey||'';
     $('#set-urssafperiod').value=s.urssafPeriod||'Mensuelle'; $('#set-urssafrate').value=s.urssafRate||'';
+    $('#set-activitystart').value=s.activityStart||''; $('#set-acreuntil').value=s.acreUntil||'';
     renderLogoPreview(); updateNumPreview(); renderTrash();
 }
 function renderLogoPreview(){
@@ -1527,6 +1584,7 @@ function saveSettings(){
     s.demandeFormUrl=$('#set-demformurl').value.trim();
     s.appKey=$('#set-appkey').value.trim();
     s.urssafPeriod=$('#set-urssafperiod').value; s.urssafRate=$('#set-urssafrate').value.trim();
+    s.activityStart=$('#set-activitystart').value; s.acreUntil=$('#set-acreuntil').value;
     urssafState=null;               // la périodicité a pu changer : on réinitialise la vue URSSAF
     satCache=null; demCache=null;   // endpoint/clé ont pu changer : on rechargera avis & demandes
     save(); refreshBrand(); toast('Réglages enregistrés', 'ok');

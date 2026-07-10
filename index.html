@@ -14,7 +14,7 @@
     <meta property="og:description" content="Gestion des devis, factures, URSSAF et clients — ERP Conseil.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://eric8740-stack.github.io/erp-conseil-app/assets/erp-conseil-logo-dark.png">
-    <link rel="stylesheet" href="css/app.css?v=acomptes">
+    <link rel="stylesheet" href="css/app.css?v=urssaf-cd">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -240,6 +240,8 @@
                     </select>
                 </label>
                 <label>Taux de cotisations (%)<input id="set-urssafrate" type="text" placeholder="ex. 21,2 — optionnel"></label>
+                <label title="Sert à calculer votre première échéance de déclaration (règle des 90 jours)">Début d'activité<input id="set-activitystart" type="date"></label>
+                <label title="Fin du taux minoré ACRE (voir l'attestation URSSAF)">Exonération ACRE jusqu'au<input id="set-acreuntil" type="date"></label>
             </div>
             <p class="muted small">Le taux ne sert qu'à une <b>estimation</b> indicative des cotisations. Le montant à déclarer reste le <b>CA encaissé</b>.</p>
         </div>
@@ -413,6 +415,6 @@
 <div id="toast" class="toast"></div>
 
 <script src="js/vendor/qrcode.js?v=1.4.4"></script>
-<script src="js/app.js?v=acomptes"></script>
+<script src="js/app.js?v=urssaf-cd"></script>
 </body>
 </html>

@@ -224,6 +224,15 @@ th.amount{text-align:right}
 .urssaf-reminder .ur-badge{display:inline-block;background:rgba(245,158,11,.2);color:var(--amber);font-size:.74rem;font-weight:700;padding:3px 10px;border-radius:30px;margin-left:6px;vertical-align:middle}
 .urssaf-reminder .ur-body{color:var(--text-secondary);font-size:.92rem;margin-top:6px}
 .urssaf-reminder .ur-link{display:inline-block;margin-top:10px;font-weight:600}
+.urssaf-reminder .ur-flex{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.urssaf-reminder .ur-flex > div:first-child{flex:1;min-width:280px}
+.urssaf-reminder .ur-acre{color:var(--accent-2, #2cd4c0);font-size:.88rem;margin-top:6px;font-weight:600}
+.ur-countdown{flex-shrink:0;text-align:center;border-radius:var(--radius);padding:14px 22px;min-width:130px}
+.ur-countdown .cd-num{display:block;font-size:2rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ur-countdown .cd-sub{display:block;font-size:.72rem;margin-top:2px;opacity:.85}
+.ur-countdown.cd-ok{background:rgba(13,148,136,.15);color:#2cd4c0;border:1px solid rgba(44,212,192,.3)}
+.ur-countdown.cd-warn{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.35)}
+.ur-countdown.cd-urgent{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.4)}
 
 /* Rappel de sauvegarde (export localStorage) */
 .backup-reminder{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
