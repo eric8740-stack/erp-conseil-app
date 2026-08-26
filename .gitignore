@@ -3,3 +3,6 @@
 
 # Archive source décompressée (non publiée)
 erpconseilapp/
+
+# Artefacts de session (constats, scripts jetables) - non publies
+_claude/

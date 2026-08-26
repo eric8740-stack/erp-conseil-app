@@ -18,15 +18,21 @@ const STATUS_LABEL = {
     envoyee:'Envoyée', payee:'Payée'
 };
 
-/* ---------- Données par défaut (pré-remplies avec vos infos) ---------- */
+/* ---------- Données par défaut ----------
+   ⚠ DÉPÔT PUBLIC : aucune coordonnée réelle, aucun nom de client réel, aucune
+   date personnelle ici. Ces champs se remplissent dans Réglages et ne vivent
+   que dans le localStorage du navigateur.
+   Les réglages déjà enregistrés priment : load() fait
+   Object.assign({}, DEFAULTS.settings, DB.settings) — une installation
+   existante n'est donc pas touchée par ces valeurs vides. */
 const DEFAULTS = {
     settings:{
-        name:'ERP Conseil',
-        owner:'Eric Paysant — Entrepreneur individuel',
-        address:'18 route de Versanas, 87920 Condat-sur-Vienne',
-        siret:'[À COMPLÉTER]',
-        email:'eric.paysant@outlook.fr',
-        phone:'06 21 84 90 54',
+        name:'',
+        owner:'',
+        address:'',
+        siret:'',
+        email:'',
+        phone:'',
         iban:'',
         logo:'',          // dataURL du logo (base64)
         logoTrimmed:false,// true = marges du logo déjà recadrées (auto)
@@ -34,7 +40,10 @@ const DEFAULTS = {
         paydays:30,       // délai de paiement par défaut (jours)
         tva:'TVA non applicable, art. 293 B du CGI',
         payterms:'Paiement à 30 jours à réception de facture, par virement bancaire.',
-        legal:"Eric Paysant — Entrepreneur individuel · ERP Conseil\nSIREN 106 416 829 · Condat-sur-Vienne (87) · Activité libérale (BNC)\nAssurance RC Pro : Hiscox (via Orus) · Garantie monde entier hors USA/Canada",
+        // Gabarit : les valeurs entre crochets se remplissent dans Reglages.
+        legal:"[Nom] - Entrepreneur individuel - [Nom commercial]\n"
+              + "SIREN [SIREN] - [Ville] - Activite liberale (BNC)\n"
+              + "Assurance RC Pro : [Assureur] - [Etendue de garantie]",
         validity:'1 mois',
         devprefix:'DEV',
         facprefix:'FAC',
@@ -42,15 +51,14 @@ const DEFAULTS = {
         formurl:'',       // URL publique de satisfaction.html (lien d'avis envoyé aux clients)
         satendpoint:'',   // URL Apps Script …/exec pour lire les avis ET les demandes (Airtable)
         demandeFormUrl:'',// URL publique de demande.html (formulaire de demande d'intervention)
-        appKey:'',        // clé de lecture (sécurité) — doit correspondre à READ_KEY côté Apps Script
+        appKey:'',        // clé de LECTURE — doit correspondre à READ_KEY côté Apps Script
+        writeKey:'',      // clé d'ÉCRITURE — doit correspondre à WRITE_KEY côté Apps Script
         urssafPeriod:'Trimestrielle', // périodicité de déclaration URSSAF (Mensuelle / Trimestrielle)
         urssafRate:'',    // taux de cotisations (%) optionnel, pour l'estimation
-        activityStart:'2026-06-13',   // début d'activité (1re déclaration : règle des 90 jours)
-        acreUntil:'2027-03-31'        // fin du taux minoré ACRE (attestation URSSAF)
+        activityStart:'',   // début d'activité (règle des 90 jours) — à saisir dans Réglages
+        acreUntil:''        // fin du taux minoré ACRE — à saisir dans Réglages
     },
-    clients:[
-        {id:'cl_demo', name:'A3D Design', address:'', siret:'', contact:'', email:'', phone:''}
-    ],
+    clients:[],   // aucun client pré-rempli : dépôt public
     documents:[],
     trash:[]   // devis/factures supprimés (récupérables)
 };
@@ -943,9 +951,14 @@ function convertDemandeToDevis(rec){
 function postDemandeStatut(rec, statut){
     const ep = (DB.settings.satendpoint||'').trim();
     if(!ep || !rec || !rec.id) return false;          // pas d'id => Code.gs pas encore redéployé
+    // Écriture d'administration : elle exige la clé d'écriture (WRITE_KEY côté
+    // Apps Script). Sans elle le relais refuse — autant le dire ici, la requête
+    // partant en mode no-cors, sa réponse n'est pas lisible.
+    const wk = (DB.settings.writeKey||'').trim();
+    if(!wk){ toast("Clé d'écriture manquante : Réglages → « Clé d'écriture ».", 'err'); return false; }
     rec.Statut = statut;
     fetch(ep, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify({ type:'demande-statut', id:rec.id, statut:statut }) }).catch(()=>{});
+        body: JSON.stringify({ type:'demande-statut', id:rec.id, statut:statut, key:wk }) }).catch(()=>{});
     return true;
 }
 /* Bouton « Marquer traitée » du détail */
@@ -1201,6 +1214,9 @@ function urssafNextDue(){
 }
 function renderUrssafReminder(){
     const box = $('#urssafReminder'); if(!box) return;
+    // Sans date de début d'activité, il n'y a pas d'échéance à calculer — et rien
+    // de personnel à afficher à un visiteur qui découvre l'application.
+    if(!DB.settings.activityStart){ box.innerHTML=''; return; }
     const d = urssafNextDue();
     const days = Math.max(0, d.daysUntil);
     const level = d.daysUntil <= 7 ? 'urgent' : (d.daysUntil <= 30 ? 'warn' : 'ok');
@@ -1506,6 +1522,7 @@ function fillSettings(){
     $('#set-formurl').value=s.formurl||''; $('#set-satendpoint').value=s.satendpoint||'';
     $('#set-demformurl').value=s.demandeFormUrl||'';
     $('#set-appkey').value=s.appKey||'';
+    $('#set-writekey').value=s.writeKey||'';
     $('#set-urssafperiod').value=s.urssafPeriod||'Mensuelle'; $('#set-urssafrate').value=s.urssafRate||'';
     $('#set-activitystart').value=s.activityStart||''; $('#set-acreuntil').value=s.acreUntil||'';
     renderLogoPreview(); updateNumPreview(); renderTrash();
@@ -1583,6 +1600,7 @@ function saveSettings(){
     s.formurl=$('#set-formurl').value.trim(); s.satendpoint=$('#set-satendpoint').value.trim();
     s.demandeFormUrl=$('#set-demformurl').value.trim();
     s.appKey=$('#set-appkey').value.trim();
+    s.writeKey=$('#set-writekey').value.trim();
     s.urssafPeriod=$('#set-urssafperiod').value; s.urssafRate=$('#set-urssafrate').value.trim();
     s.activityStart=$('#set-activitystart').value; s.acreUntil=$('#set-acreuntil').value;
     urssafState=null;               // la périodicité a pu changer : on réinitialise la vue URSSAF

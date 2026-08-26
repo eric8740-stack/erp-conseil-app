@@ -29,8 +29,15 @@
  *     - nom = AIRTABLE_TOKEN, valeur = votre jeton « pat… »
  *     - nom = READ_KEY, valeur = une clé secrète de votre choix (ex. mot de passe).
  *       La MÊME valeur doit être saisie dans l'app : Réglages → « Clé de lecture ».
- *       (Sans clé correcte, les lectures renvoient { ok:false, error:'unauthorized' }.
- *        Les ENVOIS des formulaires publics restent ouverts, sans clé.)
+ *       (Sans clé correcte, les lectures renvoient { ok:false, error:'unauthorized' }.)
+ *     - nom = WRITE_KEY, valeur = une SECONDE clé secrète, différente de READ_KEY.
+ *       La MÊME valeur doit être saisie dans l'app : Réglages → « Clé d'écriture ».
+ *       Elle protège les écritures d'administration (ex. archivage d'une demande).
+ *       ⚠ Si la propriété WRITE_KEY est absente, ces écritures sont TOUTES refusées :
+ *       on ne s'ouvre jamais par défaut.
+ *
+ *       Les ENVOIS des formulaires publics (« demande », « satisfaction ») restent
+ *       ouverts sans clé — c'est leur raison d'être : un prospect n'a aucune clé.
  *  4) Lancez UNE FOIS la fonction setupDemandes (menu Exécuter → setupDemandes,
  *     autorisez l'accès) pour créer la table "Demandes".
  *  5) Déployer → Gérer les déploiements → modifier → « Nouvelle version »
@@ -45,9 +52,30 @@ const T_DEMANDE = 'Demandes';
 /* ============================================================
    ÉCRITURE (doPost)
    ============================================================ */
+
+/* Écritures OUVERTES : les deux formulaires publics. Un prospect n'a pas de clé,
+   et c'est justement le rôle de ces deux points d'entrée d'accepter ses envois.
+   'satisfaction' couvre aussi l'absence de type (comportement historique). */
+function ecritureOuverte_(type){
+  return !type || type === 'demande' || type === 'satisfaction';
+}
+
+/* Toute AUTRE écriture (archivage d'une demande, et tout type ajouté plus tard)
+   exige WRITE_KEY. Propriété absente => refus : on ne s'ouvre jamais par défaut. */
+function cleEcritureValide_(fournie){
+  const attendue = PropertiesService.getScriptProperties().getProperty('WRITE_KEY');
+  if(!attendue) return false;
+  return String(fournie || '') === String(attendue);
+}
+
 function doPost(e){
   try{
     const d = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+
+    // Verrou : seules les insertions des formulaires publics passent sans clé.
+    if(!ecritureOuverte_(d.type) && !cleEcritureValide_(d.key)){
+      return jsonOut_({ ok: false, error: 'unauthorized' });
+    }
 
     // Mise à jour du statut d'une demande (archivage : « Traitée » / « Devis envoyé »)
     if(d.type === 'demande-statut'){
